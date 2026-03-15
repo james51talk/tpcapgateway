@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { clearSession, saveSession, SESSION_KEY } from "@/lib/session";
 import { DB_KEY, findAccountById, findCenterById, getSeedDB, saveDB } from "@/lib/db";
 
@@ -8,17 +8,6 @@ const AuthContext = createContext(null);
 
 function normalizeRole(mode) {
   return mode === "admin" ? "admin" : "center_owner";
-}
-
-function subscribe(callback) {
-  if (typeof window === "undefined") return () => {};
-  const handler = () => callback();
-  window.addEventListener("storage", handler);
-  window.addEventListener("tpcap:store", handler);
-  return () => {
-    window.removeEventListener("storage", handler);
-    window.removeEventListener("tpcap:store", handler);
-  };
 }
 
 function readJSON(key) {
@@ -31,30 +20,51 @@ function readJSON(key) {
   }
 }
 
-function getDbSnapshot() {
-  if (typeof window === "undefined") return getSeedDB();
-  const parsed = readJSON(DB_KEY);
-  if (!parsed?.centers || !parsed?.accounts) return getSeedDB();
-  return parsed;
-}
-
-function getSessionSnapshot() {
-  if (typeof window === "undefined") return null;
-  const parsed = readJSON(SESSION_KEY);
-  if (!parsed?.accountId || !parsed?.role) return null;
-  return parsed;
-}
-
 export function AuthProvider({ children }) {
-  const db = useSyncExternalStore(subscribe, getDbSnapshot, getSeedDB);
-  const session = useSyncExternalStore(subscribe, getSessionSnapshot, () => null);
-  const loading = false;
+  const [db, setDb] = useState(() => typeof window === "undefined" ? getSeedDB() : null);
+  const [session, setSession] = useState(() => typeof window === "undefined" ? null : null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const raw = window.localStorage.getItem(DB_KEY);
-    if (!raw) saveDB(getSeedDB());
+
+    const updateDb = () => {
+      const parsed = readJSON(DB_KEY);
+      if (!parsed?.centers || !parsed?.accounts) {
+        const seeded = getSeedDB();
+        setDb(seeded);
+        saveDB(seeded);
+      } else {
+        setDb(parsed);
+      }
+    };
+
+    const updateSession = () => {
+      const parsed = readJSON(SESSION_KEY);
+      if (!parsed?.accountId || !parsed?.role) {
+        setSession(null);
+      } else {
+        setSession(parsed);
+      }
+    };
+
+    updateDb();
+    updateSession();
+
+    const handler = () => {
+      updateDb();
+      updateSession();
+    };
+
+    window.addEventListener("storage", handler);
+    window.addEventListener("tpcap:store", handler);
+
+    return () => {
+      window.removeEventListener("storage", handler);
+      window.removeEventListener("tpcap:store", handler);
+    };
   }, []);
+
+  const loading = db === null;
 
   const api = useMemo(() => {
     const account = db && session ? findAccountById(db, session.accountId) : null;
