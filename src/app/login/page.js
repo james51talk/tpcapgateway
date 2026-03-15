@@ -70,9 +70,11 @@ export default function LoginPage() {
             </div>
 
             <div className="flex items-center justify-center">
-              <div className="flex h-28 w-28 items-center justify-center rounded-3xl bg-white/40 text-[#1a3c8f] ring-1 ring-white/40">
-                <BuildingIcon className="h-16 w-16" />
-              </div>
+              <img
+                src="/logo.png"
+                alt="Logo"
+                className="h-32 w-32 object-contain"
+              />
             </div>
 
             <div className="text-xs font-semibold text-[#1a3c8f]/60">
