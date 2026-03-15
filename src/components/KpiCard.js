@@ -1,37 +1,49 @@
-function toneFromTitle(title) {
-  const t = (title || "").toLowerCase();
-  if (t.includes("revenue")) return "emerald";
-  if (t.includes("share")) return "blue";
-  if (t.includes("attrition")) return "rose";
-  if (t.includes("onlist")) return "amber";
-  return "zinc";
-}
-
-const toneClasses = {
-  emerald: "from-emerald-400 to-emerald-600",
-  blue: "from-blue-400 to-blue-600",
-  rose: "from-rose-400 to-rose-600",
-  amber: "from-amber-300 to-amber-500",
-  zinc: "from-zinc-300 to-zinc-500",
+const variantToIcon = {
+  blue: "bg-blue-100 text-blue-700",
+  yellow: "bg-yellow-100 text-yellow-800",
+  green: "bg-emerald-100 text-emerald-700",
+  red: "bg-red-100 text-red-700",
+  purple: "bg-purple-100 text-purple-700",
 };
 
-export default function KpiCard({ title, value, subtitle, tone }) {
-  const usedTone = tone || toneFromTitle(title);
+const variantToValue = {
+  blue: "text-blue-900",
+  yellow: "text-amber-700",
+  green: "text-emerald-700",
+  red: "text-red-600",
+  purple: "text-purple-700",
+};
+
+export default function KpiCard({ title, value, subtitle, icon, variant = "blue" }) {
   return (
-    <div className="group relative overflow-hidden rounded-2xl bg-white p-4 shadow-sm ring-1 ring-zinc-200 transition-shadow hover:shadow-md">
-      <div
-        className={[
-          "absolute inset-x-0 top-0 h-1 bg-gradient-to-r",
-          toneClasses[usedTone] || toneClasses.zinc,
-        ].join(" ")}
-      />
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="truncate text-xs font-semibold tracking-wide text-zinc-500">{title}</div>
-          <div className="mt-2 text-2xl font-extrabold tracking-tight text-zinc-900">{value}</div>
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+            {title}
+          </div>
+          <div
+            className={[
+              "mt-2 text-3xl font-extrabold tracking-tight font-mono",
+              variantToValue[variant] || variantToValue.blue,
+            ].join(" ")}
+          >
+            {value}
+          </div>
+          {subtitle ? <div className="mt-1 text-xs text-slate-500">{subtitle}</div> : null}
         </div>
+
+        {icon ? (
+          <div
+            className={[
+              "inline-flex h-11 w-11 items-center justify-center rounded-xl",
+              variantToIcon[variant] || variantToIcon.blue,
+            ].join(" ")}
+          >
+            {icon}
+          </div>
+        ) : null}
       </div>
-      {subtitle ? <div className="mt-2 text-xs text-zinc-500">{subtitle}</div> : null}
     </div>
   );
 }

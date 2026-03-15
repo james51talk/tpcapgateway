@@ -1,20 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
+import { BuildingIcon } from "@/components/Icons";
 
 function ModeToggle({ value, onChange }) {
   return (
-    <div className="grid grid-cols-2 rounded-2xl bg-zinc-100 p-1">
+    <div className="flex overflow-hidden rounded-xl border border-slate-200">
       <button
         type="button"
         onClick={() => onChange("center_owner")}
         className={[
-          "h-10 rounded-2xl text-sm font-semibold transition-colors",
+          "flex-1 px-3 py-2 text-sm font-semibold transition-colors",
           value === "center_owner"
-            ? "bg-white text-zinc-900 shadow-sm ring-1 ring-zinc-200"
-            : "text-zinc-700 hover:bg-white/70",
+            ? "bg-[#1a3c8f] text-white"
+            : "bg-slate-50 text-slate-500 hover:bg-slate-100",
         ].join(" ")}
       >
         Center Owner
@@ -23,10 +24,10 @@ function ModeToggle({ value, onChange }) {
         type="button"
         onClick={() => onChange("admin")}
         className={[
-          "h-10 rounded-2xl text-sm font-semibold transition-colors",
+          "flex-1 px-3 py-2 text-sm font-semibold transition-colors",
           value === "admin"
-            ? "bg-white text-zinc-900 shadow-sm ring-1 ring-zinc-200"
-            : "text-zinc-700 hover:bg-white/70",
+            ? "bg-[#1a3c8f] text-white"
+            : "bg-slate-50 text-slate-500 hover:bg-slate-100",
         ].join(" ")}
       >
         Administrator
@@ -43,43 +44,53 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  if (!loading && session) {
-    router.replace("/");
-    return null;
-  }
+  const hints = useMemo(() => {
+    if (mode === "admin") return { user: "admin", pass: "admin123" };
+    return { user: "owner.manila", pass: "owner123" };
+  }, [mode]);
+
+  useEffect(() => {
+    if (loading) return;
+    if (session) router.replace("/");
+  }, [loading, session, router]);
+
+  if (!loading && session) return <div className="min-h-screen bg-[#f0f4ff]" />;
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="mx-auto flex min-h-screen w-full max-w-xl items-center px-4 py-10">
-        <div className="w-full">
-          <div className="text-center">
-            <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-yellow-400 text-lg font-extrabold text-zinc-900 shadow-sm">
-              T
-            </div>
-            <div className="mt-4 text-sm font-semibold text-zinc-700">
-              Empowering Education Management.
-            </div>
-            <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl">
-              Welcome to the TPCAP Bill Portal
-            </h1>
-            <p className="mt-3 text-sm leading-6 text-zinc-600">
-              Access your center&apos;s statistics, billing records, and performance metrics all in one
-              place.
-            </p>
-          </div>
-
-          <div className="mt-8 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-zinc-200 sm:p-8">
-            <div className="text-sm font-semibold text-zinc-900">Enter your details to access your account</div>
-
-            <div className="mt-5">
-              <div className="text-xs font-semibold text-zinc-600">Account type</div>
-              <div className="mt-2">
-                <ModeToggle value={mode} onChange={setMode} />
+    <div className="min-h-screen bg-[#f0f4ff] px-4 py-6">
+      <div className="mx-auto flex min-h-[calc(100vh-48px)] w-full max-w-[860px] items-center justify-center">
+        <div className="flex w-full overflow-hidden rounded-[20px] bg-white shadow-[0_20px_60px_rgba(26,60,143,0.15)]">
+          <div className="hidden w-[42%] flex-col justify-between bg-gradient-to-br from-yellow-300 to-orange-400 px-9 py-10 md:flex">
+            <div>
+              <div className="text-3xl font-extrabold tracking-widest text-[#1a3c8f]">TPCAP</div>
+              <div className="mt-2 text-sm font-semibold text-[#1a3c8f]/80">
+                Tutoring Centers Billing Management
               </div>
             </div>
 
+            <div className="flex items-center justify-center">
+              <div className="flex h-28 w-28 items-center justify-center rounded-3xl bg-white/40 text-[#1a3c8f] ring-1 ring-white/40">
+                <BuildingIcon className="h-16 w-16" />
+              </div>
+            </div>
+
+            <div className="text-xs font-semibold text-[#1a3c8f]/60">
+              Secure portal for authorized
+              <br />
+              center operators only.
+            </div>
+          </div>
+
+          <div className="flex flex-1 flex-col justify-center px-6 py-10 sm:px-10">
+            <h2 className="text-2xl font-extrabold text-slate-800">TPCAP Bill Portal</h2>
+            <p className="mt-2 text-sm text-slate-500">Sign in to access your billing dashboard.</p>
+
+            <div className="mt-6">
+              <ModeToggle value={mode} onChange={setMode} />
+            </div>
+
             <form
-              className="mt-5 space-y-4"
+              className="mt-6 space-y-4"
               onSubmit={(e) => {
                 e.preventDefault();
                 setError("");
@@ -92,46 +103,45 @@ export default function LoginPage() {
               }}
             >
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-zinc-700">Username</label>
+                <label className="text-xs font-semibold text-slate-600">Username</label>
                 <input
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="h-12 w-full rounded-2xl border border-zinc-300 bg-white px-4 text-sm outline-none focus:border-blue-600"
+                  className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-800 outline-none transition-shadow focus:border-[#2454b8] focus:shadow-[0_0_0_3px_rgba(36,84,184,0.12)]"
+                  placeholder="Enter your username"
                   autoComplete="username"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-zinc-700">Password</label>
+                <label className="text-xs font-semibold text-slate-600">Password</label>
                 <input
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 w-full rounded-2xl border border-zinc-300 bg-white px-4 text-sm outline-none focus:border-blue-600"
+                  className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-800 outline-none transition-shadow focus:border-[#2454b8] focus:shadow-[0_0_0_3px_rgba(36,84,184,0.12)]"
+                  placeholder="••••••••"
                   type="password"
                   autoComplete="current-password"
                 />
               </div>
 
               {error ? (
-                <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
                   {error}
                 </div>
               ) : null}
 
               <button
                 type="submit"
-                className="h-12 w-full rounded-2xl bg-blue-600 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
+                className="h-12 w-full rounded-xl bg-[#1a3c8f] text-sm font-extrabold text-white hover:bg-[#2454b8]"
               >
                 Sign In
               </button>
-
-              <div className="pt-2 text-center text-sm text-zinc-600">
-                Having trouble logging in?{" "}
-                <a href="#" className="font-semibold text-blue-600 hover:text-blue-500">
-                  Contact Support
-                </a>
-              </div>
             </form>
+
+            <p className="mt-4 text-center text-xs text-slate-400">
+              Demo: use <b>{hints.user}/{hints.pass}</b>
+            </p>
           </div>
         </div>
       </div>

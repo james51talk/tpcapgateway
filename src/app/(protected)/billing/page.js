@@ -2,9 +2,29 @@
 
 import { useMemo } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import Badge from "@/components/Badge";
+import CenterSelectorBar from "@/components/CenterSelectorBar";
+import { BuildingIcon, CalendarCheckIcon, LayersIcon, PesoSignIcon, UserIcon } from "@/components/Icons";
 import KpiCard from "@/components/KpiCard";
 import { formatPHP, getBillingData } from "@/lib/metrics";
 import { downloadBillingPdf } from "@/lib/pdf";
+
+function kpiVisual(title) {
+  switch (title) {
+    case "Total Revenue":
+      return { icon: <PesoSignIcon className="h-5 w-5" />, variant: "green" };
+    case "CO Share":
+      return { icon: <BuildingIcon className="h-5 w-5" />, variant: "blue" };
+    case "Teacher Share":
+      return { icon: <UserIcon className="h-5 w-5" />, variant: "purple" };
+    case "Lesson Share":
+      return { icon: <LayersIcon className="h-5 w-5" />, variant: "yellow" };
+    case "Weekly Billed":
+      return { icon: <CalendarCheckIcon className="h-5 w-5" />, variant: "green" };
+    default:
+      return { icon: null, variant: "blue" };
+  }
+}
 
 export default function BillingPage() {
   const { session, activeCenter, activeCenterId } = useAuth();
@@ -28,65 +48,51 @@ export default function BillingPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl">
-            Billing
-          </h1>
-          <p className="mt-1 text-sm text-zinc-600">
-            Weekly breakdown, totals, and downloadable statement.
-          </p>
-        </div>
-
-        <button
-          onClick={() => {
-            if (!billing) return;
-            downloadBillingPdf({
-              centerName: activeCenter?.name,
-              weeks: billing.weeks,
-              totals: billing.totals,
-            });
-          }}
-          disabled={!billing}
-          className={[
-            "h-11 rounded-xl px-4 text-sm font-semibold text-white shadow-sm transition-colors",
-            billing ? "bg-blue-600 hover:bg-blue-500" : "bg-zinc-300",
-          ].join(" ")}
-        >
-          Download Bill as PDF
-        </button>
+      <div>
+        <h1 className="text-[22px] font-extrabold text-slate-800">Billing</h1>
+        <p className="mt-1 text-sm text-slate-500">Weekly billing statement and revenue breakdown.</p>
       </div>
 
+      <CenterSelectorBar />
+
       {needsCenter ? (
-        <section className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
-          Select a center from the header dropdown to load billing data.
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+          Select a center to view billing data.
         </section>
       ) : null}
 
       {billing ? (
         <>
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {kpis.map((k) => (
-              <KpiCard key={k.title} title={k.title} value={k.value} subtitle={k.subtitle} />
-            ))}
+            {kpis.map((k) => {
+              const v = kpiVisual(k.title);
+              return (
+                <KpiCard
+                  key={k.title}
+                  title={k.title}
+                  value={k.value}
+                  subtitle={k.subtitle}
+                  icon={v.icon}
+                  variant={v.variant}
+                />
+              );
+            })}
           </section>
 
-          <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-zinc-200">
-            <div className="border-b border-zinc-100 px-4 py-4">
+          <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+            <div className="border-b border-slate-200 px-5 py-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <div className="text-sm font-semibold text-zinc-900">Weekly Breakdown</div>
-                  <div className="mt-0.5 text-xs text-zinc-500">
-                    Center: {activeCenter?.name || "Not selected"}
-                  </div>
+                  <div className="text-sm font-semibold text-slate-800">Weekly Billing Breakdown</div>
+                  <div className="mt-0.5 text-xs text-slate-500">{activeCenter?.name}</div>
                 </div>
-                <div className="text-xs font-semibold text-zinc-500">Currency: PHP</div>
+                <Badge variant="blue">PHP</Badge>
               </div>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="bg-zinc-50 text-xs font-semibold text-zinc-600">
+                <thead className="bg-slate-50 text-[11px] font-bold uppercase tracking-wide text-slate-500">
                   <tr>
                     <th className="px-4 py-3">Week</th>
                     <th className="px-4 py-3 text-right">Total Revenue</th>
@@ -95,33 +101,35 @@ export default function BillingPage() {
                     <th className="px-4 py-3 text-right">Lesson Share</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-100">
+                <tbody className="divide-y divide-slate-100">
                   {billing.weeks.map((w) => (
-                    <tr key={w.week} className="text-zinc-800 hover:bg-zinc-50">
-                      <td className="px-4 py-3 font-medium">{w.week}</td>
-                      <td className="px-4 py-3 text-right font-semibold tabular-nums">
+                    <tr key={w.week} className="text-slate-700 hover:bg-slate-50">
+                      <td className="px-4 py-3 font-semibold text-slate-800">{w.week}</td>
+                      <td className="px-4 py-3 text-right font-mono font-semibold tabular-nums">
                         {formatPHP(w.totalRevenue)}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums">{formatPHP(w.coShare)}</td>
-                      <td className="px-4 py-3 text-right tabular-nums">
+                      <td className="px-4 py-3 text-right font-mono tabular-nums">{formatPHP(w.coShare)}</td>
+                      <td className="px-4 py-3 text-right font-mono tabular-nums">
                         {formatPHP(w.teacherShare)}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums">
+                      <td className="px-4 py-3 text-right font-mono tabular-nums">
                         {formatPHP(w.lessonShare)}
                       </td>
                     </tr>
                   ))}
 
-                  <tr className="bg-yellow-100 font-extrabold text-zinc-900">
+                  <tr className="bg-yellow-300/80 font-extrabold text-blue-900">
                     <td className="px-4 py-3">TOTAL</td>
-                    <td className="px-4 py-3 text-right tabular-nums">
+                    <td className="px-4 py-3 text-right font-mono tabular-nums">
                       {formatPHP(billing.totals.totalRevenue)}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums">{formatPHP(billing.totals.coShare)}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">
+                    <td className="px-4 py-3 text-right font-mono tabular-nums">
+                      {formatPHP(billing.totals.coShare)}
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono tabular-nums">
                       {formatPHP(billing.totals.teacherShare)}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums">
+                    <td className="px-4 py-3 text-right font-mono tabular-nums">
                       {formatPHP(billing.totals.lessonShare)}
                     </td>
                   </tr>
@@ -129,6 +137,21 @@ export default function BillingPage() {
               </table>
             </div>
           </section>
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <button
+              onClick={() => {
+                downloadBillingPdf({
+                  centerName: activeCenter?.name,
+                  weeks: billing.weeks,
+                  totals: billing.totals,
+                });
+              }}
+              className="h-11 rounded-xl bg-yellow-400 px-4 text-sm font-extrabold text-blue-900 shadow-sm hover:bg-yellow-300"
+            >
+              Download Bill as PDF
+            </button>
+          </div>
         </>
       ) : null}
     </div>

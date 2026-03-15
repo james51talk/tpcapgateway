@@ -1,6 +1,6 @@
 export default function Tabs({ tabs, active, onChange }) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex gap-0 border-b-2 border-slate-200">
       {tabs.map((t) => {
         const isActive = t.id === active;
         return (
@@ -9,10 +9,10 @@ export default function Tabs({ tabs, active, onChange }) {
             type="button"
             onClick={() => onChange(t.id)}
             className={[
-              "h-10 rounded-full px-4 text-sm font-semibold transition-colors",
+              "px-5 py-3 text-sm font-semibold transition-colors -mb-[2px] border-b-2",
               isActive
-                ? "bg-blue-600 text-white shadow-sm"
-                : "border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50",
+                ? "border-b-[#1a3c8f] text-[#1a3c8f]"
+                : "border-b-transparent text-slate-500 hover:text-slate-700",
             ].join(" ")}
           >
             {t.label}

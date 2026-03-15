@@ -1,5 +1,7 @@
 "use client";
 
+import { ChevronDownIcon } from "@/components/Icons";
+
 const faq = [
   {
     category: "Billing",
@@ -10,7 +12,7 @@ const faq = [
       },
       {
         q: "Why is Billing empty in Administrator mode?",
-        a: "Admins must select a center from the dropdown in the header before billing data is shown.",
+        a: "Admins must select a center first (using the center selector) before billing data is shown.",
       },
       {
         q: "What does the yellow totals row mean?",
@@ -50,29 +52,29 @@ export default function FaqPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl">FAQ</h1>
-        <p className="mt-1 text-sm text-zinc-600">Common questions organized by category.</p>
+        <h1 className="text-[22px] font-extrabold text-slate-800">FAQ</h1>
+        <p className="mt-1 text-sm text-slate-500">Frequently asked questions about billing, dashboard, and support.</p>
       </div>
 
       <div className="space-y-6">
         {faq.map((section) => (
-          <section
-            key={section.category}
-            className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-zinc-200"
-          >
-            <div className="border-b border-zinc-100 px-4 py-4">
-              <div className="text-sm font-semibold text-zinc-900">{section.category}</div>
+          <section key={section.category}>
+            <div className="mb-3 text-xs font-extrabold uppercase tracking-widest text-[#1a3c8f]">
+              {section.category}
             </div>
-            <div className="divide-y divide-zinc-100">
+            <div className="space-y-3">
               {section.items.map((item) => (
-                <details key={item.q} className="group px-4 py-4">
-                  <summary className="cursor-pointer list-none text-sm font-semibold text-zinc-900">
-                    <div className="flex items-center justify-between gap-3">
-                      <span>{item.q}</span>
-                      <span className="text-zinc-400 transition-transform group-open:rotate-45">+</span>
-                    </div>
+                <details
+                  key={item.q}
+                  className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+                >
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 text-sm font-semibold text-slate-800 hover:bg-[#fafbff]">
+                    <span>{item.q}</span>
+                    <ChevronDownIcon className="h-4 w-4 text-slate-400 transition-transform group-open:rotate-180" />
                   </summary>
-                  <div className="mt-2 text-sm leading-7 text-zinc-600">{item.a}</div>
+                  <div className="border-t border-slate-200 bg-slate-50 px-5 py-4 text-sm leading-7 text-slate-600">
+                    {item.a}
+                  </div>
                 </details>
               ))}
             </div>
