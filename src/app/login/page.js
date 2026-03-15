@@ -43,6 +43,7 @@ export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const hints = useMemo(() => {
     if (mode === "admin") return { user: "admin", pass: "admin123" };
@@ -94,12 +95,13 @@ export default function LoginPage() {
               onSubmit={(e) => {
                 e.preventDefault();
                 setError("");
+                setSubmitting(true);
                 const res = login({ mode, username, password });
                 if (!res.ok) {
                   setError(res.error || "Sign in failed.");
+                  setSubmitting(false);
                   return;
                 }
-                router.replace("/");
               }}
             >
               <div className="space-y-2">
@@ -133,9 +135,13 @@ export default function LoginPage() {
 
               <button
                 type="submit"
-                className="h-12 w-full rounded-xl bg-[#1a3c8f] text-sm font-extrabold text-white hover:bg-[#2454b8]"
+                disabled={submitting}
+                className={[
+                  "h-12 w-full rounded-xl text-sm font-extrabold text-white",
+                  submitting ? "bg-slate-400" : "bg-[#1a3c8f] hover:bg-[#2454b8]",
+                ].join(" ")}
               >
-                Sign In
+                {submitting ? "Signing in..." : "Sign In"}
               </button>
             </form>
 

@@ -162,9 +162,31 @@ export default function AppShell({ children }) {
                 </div>
               </div>
 
+              <button
+                onClick={() => {
+                  logout();
+                  router.replace("/login");
+                }}
+                className="hidden h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:flex"
+              >
+                <LogOutIcon className="h-4 w-4" />
+                Sign Out
+              </button>
+
               <div className="sm:hidden flex h-9 w-9 items-center justify-center rounded-full bg-[#1a3c8f] text-xs font-extrabold text-white">
                 {initials(nameLabel)}
               </div>
+
+              <button
+                onClick={() => {
+                  logout();
+                  router.replace("/login");
+                }}
+                className="sm:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                aria-label="Sign out"
+              >
+                <LogOutIcon className="h-5 w-5" />
+              </button>
             </div>
           </div>
         </header>

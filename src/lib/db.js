@@ -1,4 +1,4 @@
-const DB_KEY = "tpcap.db.v1";
+export const DB_KEY = "tpcap.db.v1";
 
 const seedDB = {
   centers: [
@@ -51,6 +51,7 @@ export function loadDB() {
 export function saveDB(db) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(DB_KEY, JSON.stringify(db));
+  window.dispatchEvent(new Event("tpcap:store"));
 }
 
 export function newId(prefix) {

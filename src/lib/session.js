@@ -1,4 +1,4 @@
-const SESSION_KEY = "tpcap.session.v1";
+export const SESSION_KEY = "tpcap.session.v1";
 
 export function loadSession() {
   if (typeof window === "undefined") return null;
@@ -14,10 +14,12 @@ export function loadSession() {
 export function saveSession(session) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  window.dispatchEvent(new Event("tpcap:store"));
 }
 
 export function clearSession() {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(SESSION_KEY);
+  window.dispatchEvent(new Event("tpcap:store"));
 }
 
