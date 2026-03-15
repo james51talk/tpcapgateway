@@ -12,17 +12,17 @@ import { downloadBillingPdf } from "@/lib/pdf";
 function kpiVisual(title) {
   switch (title) {
     case "Total Revenue":
-      return { icon: <PesoSignIcon className="h-5 w-5" />, variant: "green" };
+      return { icon: <PesoSignIcon className="h-5 w-5" />, variant: "auto" };
     case "CO Share":
-      return { icon: <BuildingIcon className="h-5 w-5" />, variant: "blue" };
+      return { icon: <BuildingIcon className="h-5 w-5" />, variant: "auto" };
     case "Teacher Share":
-      return { icon: <UserIcon className="h-5 w-5" />, variant: "purple" };
+      return { icon: <UserIcon className="h-5 w-5" />, variant: "auto" };
     case "Lesson Share":
-      return { icon: <LayersIcon className="h-5 w-5" />, variant: "yellow" };
+      return { icon: <LayersIcon className="h-5 w-5" />, variant: "auto" };
     case "Weekly Billed":
-      return { icon: <CalendarCheckIcon className="h-5 w-5" />, variant: "green" };
+      return { icon: <CalendarCheckIcon className="h-5 w-5" />, variant: "auto" };
     default:
-      return { icon: null, variant: "blue" };
+      return { icon: null, variant: "auto" };
   }
 }
 
@@ -105,31 +105,31 @@ export default function BillingPage() {
                   {billing.weeks.map((w) => (
                     <tr key={w.week} className="text-slate-700 hover:bg-slate-50">
                       <td className="px-4 py-3 font-semibold text-slate-800">{w.week}</td>
-                      <td className="px-4 py-3 text-right font-mono font-semibold tabular-nums">
+                      <td className="px-4 py-3 text-right font-mono font-semibold tabular-nums text-blue-700">
                         {formatPHP(w.totalRevenue)}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono tabular-nums">{formatPHP(w.coShare)}</td>
-                      <td className="px-4 py-3 text-right font-mono tabular-nums">
+                      <td className="px-4 py-3 text-right font-mono tabular-nums text-blue-700">{formatPHP(w.coShare)}</td>
+                      <td className="px-4 py-3 text-right font-mono tabular-nums text-blue-700">
                         {formatPHP(w.teacherShare)}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono tabular-nums">
+                      <td className="px-4 py-3 text-right font-mono tabular-nums text-blue-700">
                         {formatPHP(w.lessonShare)}
                       </td>
                     </tr>
                   ))}
 
-                  <tr className="bg-yellow-300/80 font-extrabold text-blue-900">
+                  <tr className="bg-blue-50/80 font-extrabold text-slate-900">
                     <td className="px-4 py-3">TOTAL</td>
-                    <td className="px-4 py-3 text-right font-mono tabular-nums">
+                    <td className="px-4 py-3 text-right font-mono tabular-nums text-blue-700">
                       {formatPHP(billing.totals.totalRevenue)}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono tabular-nums">
+                    <td className="px-4 py-3 text-right font-mono tabular-nums text-blue-700">
                       {formatPHP(billing.totals.coShare)}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono tabular-nums">
+                    <td className="px-4 py-3 text-right font-mono tabular-nums text-blue-700">
                       {formatPHP(billing.totals.teacherShare)}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono tabular-nums">
+                    <td className="px-4 py-3 text-right font-mono tabular-nums text-blue-700">
                       {formatPHP(billing.totals.lessonShare)}
                     </td>
                   </tr>

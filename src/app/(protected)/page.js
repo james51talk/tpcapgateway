@@ -60,9 +60,7 @@ export default function DashboardPage() {
         <>
           <section className="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
             <div className="flex items-center gap-4 px-5 py-5">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
-                <BuildingIcon className="h-6 w-6" />
-              </div>
+              <img src="/logo.png" alt="Logo" className="h-6 w-6 object-contain" />
               <div className="min-w-0">
                 <div className="truncate text-base font-extrabold text-slate-800">
                   {activeCenter?.name || "Center"}

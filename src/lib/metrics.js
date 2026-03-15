@@ -24,8 +24,8 @@ export function formatInt(n) {
 
 export function formatPHP(n) {
   const formatted = new Intl.NumberFormat("en-PH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(cleanNumber(n));
   return `₱ ${formatted.replaceAll("-", "")}`;
 }
