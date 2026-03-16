@@ -57,7 +57,21 @@ export function getDashboardKpis(centerId) {
 
 export function getBillingData(centerId) {
   const seed = hashString(centerId || "none");
-  const weeks = Array.from({ length: 4 }).map((_, i) => {
+  const startDate = new Date(); // Current date
+  startDate.setDate(startDate.getDate() - 28); // Start 4 weeks ago
+  const weeks = Array.from({ length: 12 }).map((_, i) => {
+    const weekStart = new Date(startDate);
+    weekStart.setDate(startDate.getDate() + i * 7);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const startMonth = monthNames[weekStart.getMonth()];
+    const endMonth = monthNames[weekEnd.getMonth()];
+    const weekLabel = startMonth === endMonth 
+      ? `${startMonth} ${weekStart.getDate()}-${weekEnd.getDate()}`
+      : `${startMonth} ${weekStart.getDate()}-${endMonth} ${weekEnd.getDate()}`;
+
     const s = seed ^ (0x9000 + i * 17);
     const total = pickNumber(s, 30_000, 120_000);
     const coSharePct = pickNumber(s ^ 0x1, 35, 65);
@@ -66,7 +80,9 @@ export function getBillingData(centerId) {
     const coShare = Math.round((total * coSharePct) / 100);
     const teacherShare = total - coShare;
     return {
-      week: `Week ${i + 1}`,
+      week: weekLabel,
+      startDate: new Date(weekStart),
+      endDate: new Date(weekEnd),
       totalRevenue: total,
       coShare,
       teacherShare,

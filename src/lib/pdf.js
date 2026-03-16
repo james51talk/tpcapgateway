@@ -2,7 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { formatPHP } from "@/lib/metrics";
 
-export function downloadBillingPdf({ centerName, weeks, totals }) {
+export function downloadBillingPdf({ centerName, periods, totals }) {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
 
   doc.setFillColor(250, 204, 21);
@@ -25,12 +25,12 @@ export function downloadBillingPdf({ centerName, weeks, totals }) {
   doc.setFontSize(10);
   doc.text(`Generated: ${new Date().toLocaleString("en-PH")}`, 40, 116);
 
-  const body = weeks.map((w) => [
-    w.week,
-    formatPHP(w.totalRevenue),
-    formatPHP(w.coShare),
-    formatPHP(w.teacherShare),
-    formatPHP(w.lessonShare),
+  const body = periods.map((p) => [
+    p.month || p.week,
+    formatPHP(p.totalRevenue),
+    formatPHP(p.coShare),
+    formatPHP(p.teacherShare),
+    formatPHP(p.lessonShare),
   ]);
 
   body.push([
