@@ -6,10 +6,6 @@ import { DB_KEY, findAccountById, findCenterById, getSeedDB, saveDB } from "@/li
 
 const AuthContext = createContext(null);
 
-function normalizeRole(mode) {
-  return mode === "admin" ? "admin" : "center_owner";
-}
-
 function readJSON(key) {
   try {
     const raw = window.localStorage.getItem(key);
@@ -80,12 +76,10 @@ export function AuthProvider({ children }) {
       account,
       activeCenter,
       activeCenterId,
-      login: ({ mode, username, password }) => {
+      login: ({ username, password }) => {
         if (!db) return { ok: false, error: "App is still loading." };
-        const role = normalizeRole(mode);
         const match = db.accounts.find(
           (a) =>
-            a.role === role &&
             a.username.trim().toLowerCase() === username.trim().toLowerCase() &&
             a.password === password
         );

@@ -22,11 +22,11 @@ export default function ProtectedLayout({ children }) {
   }, [loading, session, pathname, router]);
 
   if (loading) {
-    return <div className="min-h-screen bg-zinc-50" />;
+    return <div className="min-h-screen bg-white" />;
   }
 
   if (!session) {
-    return <div className="min-h-screen bg-zinc-50" />;
+    return <div className="min-h-screen bg-white" />;
   }
 
   return <AppShell>{children}</AppShell>;

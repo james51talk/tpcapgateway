@@ -24,11 +24,11 @@ function SidebarLink({ href, label, icon, onNavigate }) {
       href={href}
       onClick={onNavigate}
       className={[
-        "flex items-center gap-2.5 px-5 py-2.5 text-sm font-semibold transition-colors",
+        "flex items-center gap-2.5 px-5 py-2.5 text-sm font-semibold transition-all duration-200",
         "border-l-[3px] border-transparent",
         active
-          ? "bg-yellow-300/10 text-yellow-300 border-l-yellow-300"
-          : "text-white/70 hover:bg-white/10 hover:text-white",
+          ? "bg-yellow-300/20 text-yellow-300 border-l-yellow-300"
+          : "text-white/70 hover:bg-white/10 hover:text-white/90",
       ].join(" ")}
     >
       <span className="inline-flex h-5 w-5 items-center justify-center">{icon}</span>
@@ -137,28 +137,28 @@ export default function AppShell({ children }) {
       </aside>
 
       <div className="md:ml-[230px]">
-        <header className="sticky top-0 z-40 h-[62px] border-b border-slate-200 bg-white shadow-sm">
+        <header className="sticky top-0 z-40 h-[62px] border-b border-blue-200/40 bg-gradient-to-r from-white to-yellow-50/30 shadow-sm backdrop-blur-sm">
           <div className="flex h-full items-center justify-between gap-3 px-4 sm:px-7">
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setMobileOpen((v) => !v)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 md:hidden"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-blue-200/50 bg-white text-blue-700 hover:bg-blue-50 md:hidden transition-colors"
                 aria-label="Toggle menu"
               >
                 {mobileOpen ? <XIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
               </button>
-              <div className="text-[17px] font-extrabold text-[#1a3c8f]">{title}</div>
+              <div className="text-lg font-bold bg-gradient-to-r from-blue-900 to-blue-600 bg-clip-text text-transparent">{title}</div>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="hidden sm:flex items-center gap-2 rounded-full border border-slate-200 bg-[#f0f4ff] px-2 py-1">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1a3c8f] text-xs font-extrabold text-white">
+              <div className="hidden sm:flex items-center gap-2 rounded-full border border-blue-200/50 bg-gradient-to-r from-blue-50/80 to-yellow-50/50 px-2 py-1 backdrop-blur-sm">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-blue-700 text-xs font-bold text-white">
                   {initials(nameLabel)}
                 </div>
                 <div className="pr-2 leading-tight">
-                  <div className="text-xs font-bold text-slate-700">{nameLabel}</div>
-                  <div className="text-[10px] font-semibold text-slate-500">{roleLabel}</div>
+                  <div className="text-xs font-bold text-slate-900">{nameLabel}</div>
+                  <div className="text-[10px] font-medium text-slate-600">{roleLabel}</div>
                 </div>
               </div>
 
@@ -167,13 +167,13 @@ export default function AppShell({ children }) {
                   logout();
                   router.replace("/login");
                 }}
-                className="hidden h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:flex"
+                className="hidden h-10 items-center justify-center gap-2 rounded-lg border border-blue-200/50 bg-gradient-to-r from-blue-50 to-yellow-50/30 px-3 text-sm font-semibold text-slate-900 hover:bg-blue-100/50 sm:flex transition-colors"
               >
                 <LogOutIcon className="h-4 w-4" />
                 Sign Out
               </button>
 
-              <div className="sm:hidden flex h-9 w-9 items-center justify-center rounded-full bg-[#1a3c8f] text-xs font-extrabold text-white">
+              <div className="sm:hidden flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-blue-700 text-xs font-bold text-white">
                 {initials(nameLabel)}
               </div>
 
@@ -182,7 +182,7 @@ export default function AppShell({ children }) {
                   logout();
                   router.replace("/login");
                 }}
-                className="sm:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                className="sm:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-blue-200/50 bg-white text-blue-700 hover:bg-blue-50 transition-colors"
                 aria-label="Sign out"
               >
                 <LogOutIcon className="h-5 w-5" />
@@ -191,7 +191,11 @@ export default function AppShell({ children }) {
           </div>
         </header>
 
-        <main className="p-5 sm:p-7">{children}</main>
+        <main className="p-5 sm:p-7 bg-gradient-to-br from-yellow-50 via-yellow-100/50 to-white min-h-[calc(100vh-62px)] relative overflow-hidden">
+          <div className="absolute top-20 right-20 w-80 h-80 bg-yellow-300/20 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-10 left-10 w-80 h-80 bg-yellow-400/15 rounded-full blur-3xl"></div>
+          <div className="relative z-10">{children}</div>
+        </main>
       </div>
     </div>
   );

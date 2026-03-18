@@ -30,29 +30,188 @@ export function formatPHP(n) {
   return `₱ ${formatted.replaceAll("-", "")}`;
 }
 
-export function getDashboardKpis(centerId) {
-  const seed = hashString(centerId || "none");
-  const activeOnlist = pickNumber(seed ^ 0x1111, 10, 90);
-  const overallOnlist = activeOnlist + pickNumber(seed ^ 0x2222, 5, 120);
-  const attrition = pickNumber(seed ^ 0x3333, 1, 25);
-  const coRevenue = pickNumber(seed ^ 0x4444, 30_000, 250_000);
-  const teacherRevenue = pickNumber(seed ^ 0x5555, 20_000, 220_000);
-  const coMonthlyRevenue = pickNumber(seed ^ 0x6666, 60_000, 480_000);
-  const coShare = pickNumber(seed ^ 0x7777, 35, 65);
-  const teacherShare = 100 - coShare;
-  const allDayBookOpen = (seed & 1) === 0 ? "Open" : "Closed";
+export function getWeeksInMonth(year, month) {
+  const weeks = [];
+  const first = new Date(year, month, 1);
+  const last = new Date(year, month + 1, 0);
+  
+  let currentDate = new Date(first);
+  
+  while (currentDate <= last) {
+    const dayOfWeek = currentDate.getDay();
+    const weekStart = new Date(currentDate);
+    weekStart.setDate(currentDate.getDate() - dayOfWeek + 1);
+    
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    
+    // Only add if week starts in this month
+    if (weekStart.getMonth() === month || (weekStart.getMonth() < month && weekEnd.getMonth() === month)) {
+      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      const startMonth = monthNames[weekStart.getMonth()];
+      const endMonth = monthNames[weekEnd.getMonth()];
+      const label = startMonth === endMonth 
+        ? `${startMonth} ${weekStart.getDate()}-${weekEnd.getDate()}`
+        : `${startMonth} ${weekStart.getDate()}-${endMonth} ${weekEnd.getDate()}`;
+      
+      weeks.push({ label, start: new Date(weekStart), end: new Date(weekEnd) });
+    }
+    
+    currentDate.setDate(currentDate.getDate() + 7);
+  }
+  
+  return weeks;
+}
 
-  return [
-    { title: "Active Onlist", value: formatInt(activeOnlist) },
-    { title: "Overall Onlist", value: formatInt(overallOnlist) },
-    { title: "Attrition", value: `${attrition}%` },
-    { title: "CO Revenue", value: formatPHP(coRevenue) },
-    { title: "Teacher Revenue", value: formatPHP(teacherRevenue) },
-    { title: "CO Monthly Revenue", value: formatPHP(coMonthlyRevenue) },
-    { title: "CO Share", value: `${coShare}%` },
-    { title: "Teacher Share", value: `${teacherShare}%` },
-    { title: "All Day Book/Open", value: allDayBookOpen },
+export function getDashboardKpis(centerId, opts = {}) {
+  const { filterType = "week", filterDate = new Date() } = opts;
+  
+  const seed = hashString(centerId || "none");
+  const activeOnlist = pickNumber(seed ^ 0x1111, 25, 90);
+  const activeOnlistPrev = pickNumber(seed ^ 0xaaaa, 10, 24);
+  const activeOnlistTarget = 80;
+  
+  const overallOnlist = pickNumber(seed ^ 0x2222, 50, 150);
+  const overallOnlistPrev = pickNumber(seed ^ 0xbbbb, 30, 49);
+  const overallOnlistTarget = 120;
+  
+  const attrition = pickNumber(seed ^ 0x3333, 0, 15);
+  const attritionPrev = pickNumber(seed ^ 0xcccc, 16, 30);
+  const attritionTarget = 5;
+  
+  const centerCapacity = pickNumber(seed ^ 0x8888, 75, 95);
+  const centerCapacityPrev = pickNumber(seed ^ 0xdddd, 50, 74);
+  const centerCapacityTarget = 90;
+  
+  const utilization = pickNumber(seed ^ 0x9999, 70, 90);
+  const utilizationPrev = pickNumber(seed ^ 0xeeee, 50, 69);
+  const utilizationTarget = 85;
+  
+  const teacherEarnings = pickNumber(seed ^ 0x4444, 100_000, 250_000);
+  const teacherEarningsPrev = pickNumber(seed ^ 0x1111, 50_000, 99_999);
+  const teacherEarningsTarget = 200_000;
+  
+  const coEarnings = pickNumber(seed ^ 0x5555, 80_000, 220_000);
+  const coEarningsPrev = pickNumber(seed ^ 0x2222, 40_000, 79_999);
+  const coEarningsTarget = 180_000;
+
+  // Helper to calculate percentage change
+  const calcPercentChange = (current, previous) => {
+    if (previous === 0) return 0;
+    return Math.round(((current - previous) / previous) * 100);
+  };
+
+  // Helper to calculate progress to target
+  const calcProgress = (current, target) => {
+    if (target === 0) return 0;
+    return Math.min(100, Math.round((current / target) * 100));
+  };
+
+  const kpis = [
+    { 
+      title: "Active Onlist", 
+      value: formatInt(activeOnlist),
+      previous: formatInt(activeOnlistPrev),
+      target: activeOnlistTarget,
+      progress: calcProgress(activeOnlist, activeOnlistTarget),
+      percentChange: calcPercentChange(activeOnlist, activeOnlistPrev),
+      status: activeOnlist > activeOnlistPrev ? "success" : "danger" 
+    },
+    { 
+      title: "Overall Onlist", 
+      value: formatInt(overallOnlist),
+      previous: formatInt(overallOnlistPrev),
+      target: overallOnlistTarget,
+      progress: calcProgress(overallOnlist, overallOnlistTarget),
+      percentChange: calcPercentChange(overallOnlist, overallOnlistPrev),
+      status: overallOnlist > overallOnlistPrev ? "success" : "danger" 
+    },
+    { 
+      title: "Center Capacity", 
+      value: `${centerCapacity}%`,
+      previous: `${centerCapacityPrev}%`,
+      target: centerCapacityTarget,
+      progress: centerCapacity,
+      percentChange: centerCapacity - centerCapacityPrev,
+      status: centerCapacity > centerCapacityPrev ? "success" : "danger" 
+    },
+    { 
+      title: "Utilization", 
+      value: `${utilization}%`,
+      previous: `${utilizationPrev}%`,
+      target: utilizationTarget,
+      progress: utilization,
+      percentChange: utilization - utilizationPrev,
+      status: utilization > utilizationPrev ? "success" : "danger" 
+    },
+    { 
+      title: "Teacher Earnings", 
+      value: formatPHP(teacherEarnings),
+      previous: formatPHP(teacherEarningsPrev),
+      target: teacherEarningsTarget,
+      progress: calcProgress(teacherEarnings, teacherEarningsTarget),
+      percentChange: calcPercentChange(teacherEarnings, teacherEarningsPrev),
+      status: teacherEarnings > teacherEarningsPrev ? "success" : "danger" 
+    },
+    { 
+      title: "CO Earnings", 
+      value: formatPHP(coEarnings),
+      previous: formatPHP(coEarningsPrev),
+      target: coEarningsTarget,
+      progress: calcProgress(coEarnings, coEarningsTarget),
+      percentChange: calcPercentChange(coEarnings, coEarningsPrev),
+      status: coEarnings > coEarningsPrev ? "success" : "danger" 
+    },
+    { 
+      title: "Attrition", 
+      value: `${attrition}%`,
+      previous: `${attritionPrev}%`,
+      target: attritionTarget,
+      progress: Math.max(0, 100 - (attrition * 100 / 30)), // Inverse progress for attrition
+      percentChange: attrition - attritionPrev,
+      status: attrition < attritionPrev ? "success" : "danger" 
+    },
   ];
+
+  // Generate date range
+  let dateRange = "";
+  if (filterType === "month") {
+    const year = filterDate.getFullYear();
+    const month = filterDate.getMonth();
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const endDate = new Date(year, month + 1, 0);
+    dateRange = `${monthNames[month]} 1-${endDate.getDate()}`;
+  } else {
+    const today = filterDate;
+    const dayOfWeek = today.getDay();
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - dayOfWeek + 1);
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 6);
+    
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const startMonth = monthNames[startDate.getMonth()];
+    const endMonth = monthNames[endDate.getMonth()];
+    dateRange = startMonth === endMonth 
+      ? `${startMonth} ${startDate.getDate()}-${endDate.getDate()}`
+      : `${startMonth} ${startDate.getDate()}-${endMonth} ${endDate.getDate()}`;
+  }
+
+  // Calculate summary stats
+  const healthyKpis = kpis.filter(k => k.status === "success").length;
+  const needsAttention = kpis.filter(k => k.status === "danger").length;
+  const healthPercentage = Math.round((healthyKpis / kpis.length) * 100);
+
+  return {
+    dateRange,
+    kpis,
+    summary: {
+      healthyKpis,
+      needsAttention,
+      healthPercentage,
+      totalKpis: kpis.length,
+    }
+  };
 }
 
 export function getBillingData(centerId) {
