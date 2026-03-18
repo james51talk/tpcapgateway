@@ -46,10 +46,11 @@ export default function AppShell({ children }) {
   const showAdmin = session?.role === "admin";
   const title = useMemo(() => {
     if (pathname === "/") return "Dashboard";
-if (pathname === "/billing") return "Earnings";
+    if (pathname === "/centers") return "Center Information";
+    if (pathname === "/billing") return "Earnings";
     if (pathname === "/admin") return "Admin Panel";
     if (pathname === "/faq") return "FAQ";
-return "TPCAP-CO Portal";
+    return "TPCAP-CO Portal";
   }, [pathname]);
 
   const roleLabel = session?.role === "admin" ? "Administrator" : "Center Owner";
@@ -72,7 +73,7 @@ return "TPCAP-CO Portal";
         ].join(" ")}
       >
         <div className="border-b border-white/10 px-5 py-6">
-<div className="text-sm font-extrabold tracking-widest text-yellow-300">
+          <div className="text-sm font-extrabold tracking-widest text-yellow-300">
             TPCAP-CO Portal
           </div>
         </div>
@@ -89,8 +90,14 @@ return "TPCAP-CO Portal";
               onNavigate={() => setMobileOpen(false)}
             />
             <SidebarLink
+              href="/centers"
+              label="Center Information"
+              icon={<FileTextIcon className="h-5 w-5" />}
+              onNavigate={() => setMobileOpen(false)}
+            />
+            <SidebarLink
               href="/billing"
-label="Earnings"
+              label="Earnings"
               icon={<FileTextIcon className="h-5 w-5" />}
               onNavigate={() => setMobileOpen(false)}
             />
