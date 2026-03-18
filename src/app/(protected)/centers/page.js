@@ -53,6 +53,12 @@ export default function CenterInformationPage() {
 
   const needsCenter = session?.role === "admin" && !activeCenterId;
 
+  const stats = [
+    { title: "Active Onlist", value: "124", subtitle: "Current", icon: <UsersIcon className="h-5 w-5" />, variant: "blue" },
+    { title: "Overall Onlist", value: "156", subtitle: "All time", icon: <UserIcon className="h-5 w-5" />, variant: "blue" },
+    { title: "Center Capacity", value: "200", subtitle: "Max", icon: <BuildingIcon className="h-5 w-5" />, variant: "blue" },
+  ];
+
   if (needsCenter) {
     return (
       <div className="space-y-6">
@@ -78,12 +84,6 @@ export default function CenterInformationPage() {
       </div>
     );
   }
-
-  const stats = [
-    { title: "Active Onlist", value: "124", subtitle: "Current", icon: <UsersIcon className="h-5 w-5" />, variant: "blue" },
-    { title: "Overall Onlist", value: "156", subtitle: "All time", icon: <UserIcon className="h-5 w-5" />, variant: "blue" },
-    { title: "Center Capacity", value: "200", subtitle: "Max", icon: <BuildingIcon className="h-5 w-5" />, variant: "blue" },
-  ];
 
   return (
     <div className="space-y-6">
@@ -112,7 +112,7 @@ export default function CenterInformationPage() {
       </section>
 
       <section className="rounded-2xl bg-gradient-to-br from-white to-blue-50/30 shadow-md border border-blue-200/60 backdrop-blur-sm p-8 animate-in fade-in slide-in-from-top-4 duration-700 delay-100">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center border-2 border-blue-200">
               <BuildingIcon className="h-8 w-8 text-blue-700" />
@@ -129,79 +129,79 @@ export default function CenterInformationPage() {
             {editing ? 'Cancel' : 'Edit'} 
           </button>
         </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className={`p-6 rounded-2xl border shadow-sm transition-all ${editing ? 'ring-2 ring-blue-200 border-blue-300' : 'border-slate-200'}`}>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center">
+                <UserIcon className="h-6 w-6 text-blue-700" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">Owner Details</h3>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-slate-600 mb-2">Full Name</label>
+                <input 
+                  value={centerData.owner}
+                  onChange={(e) => setCenterData(prev => ({...prev, owner: e.target.value}))}
+                  className={`w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 transition-all text-slate-900 ${editing ? 'focus:border-blue-500' : 'bg-slate-50 cursor-not-allowed border-slate-300'}`}
+                  disabled={!editing}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-600 mb-2">Email</label>
+                  <input 
+                    value={centerData.ownerEmail}
+                    onChange={(e) => setCenterData(prev => ({...prev, ownerEmail: e.target.value}))}
+                    className={`w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 transition-all text-slate-900 ${editing ? 'focus:border-blue-500' : 'bg-slate-50 cursor-not-allowed border-slate-300'}`}
+                    disabled={!editing}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-600 mb-2">Phone</label>
+                  <input 
+                    value={centerData.ownerPhone}
+                    onChange={(e) => setCenterData(prev => ({...prev, ownerPhone: e.target.value}))}
+                    className={`w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 transition-all text-slate-900 ${editing ? 'focus:border-blue-500' : 'bg-slate-50 cursor-not-allowed border-slate-300'}`}
+                    disabled={!editing}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className={`p-6 rounded-2xl border shadow-sm transition-all ${editing ? 'ring-2 ring-emerald-200 border-emerald-300' : 'border-slate-200'}`}>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-50 flex items-center justify-center">
+                <BuildingIcon className="h-6 w-6 text-emerald-700" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">Location</h3>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-slate-600 mb-2">Location Name</label>
+                <input 
+                  value={centerData.location}
+                  onChange={(e) => setCenterData(prev => ({...prev, location: e.target.value}))}
+                  className={`w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-emerald-500 transition-all text-slate-900 ${editing ? 'focus:border-emerald-500' : 'bg-slate-50 cursor-not-allowed border-slate-300'}`}
+                  disabled={!editing}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-600 mb-2">Full Address</label>
+                <textarea 
+                  rows="3"
+                  value={centerData.address}
+                  onChange={(e) => setCenterData(prev => ({...prev, address: e.target.value}))}
+                  className={`w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-emerald-500 transition-all resize-vertical text-slate-900 ${editing ? 'focus:border-emerald-500' : 'bg-slate-50 cursor-not-allowed border-slate-300'}`}
+                  disabled={!editing}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className={`p-6 rounded-2xl border shadow-md transition-all ${editing ? 'border-blue-300 ring-2 ring-blue-200 ring-opacity-50' : 'border-slate-200'}`}>
-          <div className="flex items-center gap-4 mb-6">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center">
-              <UserIcon className="h-6 w-6 text-blue-700" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-900">Owner Details</h3>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-semibold text-slate-600 mb-2">Full Name</label>
-              <input 
-                value={centerData.owner}
-                onChange={(e) => setCenterData(prev => ({...prev, owner: e.target.value}))}
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 transition-all ${editing ? '' : 'bg-slate-50 cursor-not-allowed'}`}
-                disabled={!editing}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-600 mb-2">Email</label>
-                <input 
-                  value={centerData.ownerEmail}
-                  onChange={(e) => setCenterData(prev => ({...prev, ownerEmail: e.target.value}))}
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 transition-all ${editing ? '' : 'bg-slate-50 cursor-not-allowed'}`}
-                  disabled={!editing}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-600 mb-2">Phone</label>
-                <input 
-                  value={centerData.ownerPhone}
-                  onChange={(e) => setCenterData(prev => ({...prev, ownerPhone: e.target.value}))}
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 transition-all ${editing ? '' : 'bg-slate-50 cursor-not-allowed'}`}
-                  disabled={!editing}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className={`p-6 rounded-2xl border shadow-md transition-all ${editing ? 'border-emerald-300 ring-2 ring-emerald-200 ring-opacity-50' : 'border-slate-200'}`}>
-          <div className="flex items-center gap-4 mb-6">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-50 flex items-center justify-center">
-              <BuildingIcon className="h-6 w-6 text-emerald-700" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-900">Location</h3>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-semibold text-slate-600 mb-2">Location Name</label>
-              <input 
-                value={centerData.location}
-                onChange={(e) => setCenterData(prev => ({...prev, location: e.target.value}))}
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-emerald-500 transition-all ${editing ? '' : 'bg-slate-50 cursor-not-allowed'}`}
-                disabled={!editing}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-slate-600 mb-2">Full Address</label>
-              <textarea 
-                rows="3"
-                value={centerData.address}
-                onChange={(e) => setCenterData(prev => ({...prev, address: e.target.value}))}
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-emerald-500 transition-all resize-vertical ${editing ? '' : 'bg-slate-50 cursor-not-allowed'}`}
-                disabled={!editing}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
 
       <section className="rounded-2xl bg-white border shadow-md overflow-hidden">
         <div className="border-b border-slate-200 px-6 py-4 bg-slate-50">
