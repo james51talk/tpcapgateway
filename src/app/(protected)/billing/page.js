@@ -1,247 +1,215 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useAuth } from "@/components/AuthProvider";
-import Badge from "@/components/Badge";
-import CenterSelectorBar from "@/components/CenterSelectorBar";
-import { BuildingIcon, CalendarCheckIcon, LayersIcon, PesoSignIcon, UserIcon } from "@/components/Icons";
-import KpiCard from "@/components/KpiCard";
-import { formatPHP, getBillingData } from "@/lib/metrics";
-import { downloadBillingPdf } from "@/lib/pdf";
+import { useMemo, useState } from 'react';
+import { useAuth } from '@/components/AuthProvider';
+import Badge from '@/components/Badge';
+import CenterSelectorBar from '@/components/CenterSelectorBar';
+import DashboardDateFilter from '@/components/DashboardDateFilter';
+import { BuildingIcon, PesoSignIcon } from '@/components/Icons';
+import { formatPHP, getBillingData } from '@/lib/metrics';
+import { downloadBillingPdf } from '@/lib/pdf';
 
-function kpiVisual(title) {
-  switch (title) {
-    case "Total Revenue":
-      return { icon: <PesoSignIcon className="h-5 w-5" />, variant: "auto" };
-    case "CO Share":
-      return { icon: <BuildingIcon className="h-5 w-5" />, variant: "auto" };
-    case "Teacher Share":
-      return { icon: <UserIcon className="h-5 w-5" />, variant: "auto" };
-    case "Lesson Share":
-      return { icon: <LayersIcon className="h-5 w-5" />, variant: "auto" };
-    case "Weekly Billed":
-      return { icon: <CalendarCheckIcon className="h-5 w-5" />, variant: "auto" };
-    default:
-      return { icon: null, variant: "auto" };
-  }
-}
-
-export default function BillingPage() {
+export default function EarningsPage() {
   const { session, activeCenter, activeCenterId } = useAuth();
 
-  const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
+  const [filterOptions, setFilterOptions] = useState({ filterType: 'month', filterDate: new Date() });
 
-  const [filterMonth, setFilterMonth] = useState(monthNames[new Date().getMonth()]);
-
-  const needsCenter = session?.role === "admin" && !activeCenterId;
+  const needsCenter = session?.role === 'admin' && !activeCenterId;
 
   const billing = useMemo(() => {
     if (needsCenter) return null;
     return getBillingData(activeCenterId);
   }, [activeCenterId, needsCenter]);
 
+  const handleFilterChange = (options) => {
+    setFilterOptions(options);
+  };
+
+  const { filterType, filterDate } = filterOptions;
+
   const filteredWeeks = useMemo(() => {
     if (!billing) return [];
-    if (filterMonth === 'all') return billing.weeks;
-    const selectedMonthIndex = monthNames.indexOf(filterMonth);
-    return billing.weeks.filter((w) => w.startDate.getMonth() === selectedMonthIndex);
-  }, [billing, filterMonth, monthNames]);
+    const allWeeks = billing.weeks || [];
+    if (filterType === 'week') {
+      return allWeeks.filter(w => {
+        const weekStart = w.startDate;
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        return filterDate >= weekStart && filterDate <= weekEnd;
+      });
+    } else {
+      const currentMonth = filterDate.getMonth();
+      const currentYear = filterDate.getFullYear();
+      return allWeeks.filter(w => w.startDate.getMonth() === currentMonth && w.startDate.getFullYear() === currentYear);
+    }
+  }, [billing, filterType, filterDate]);
 
   const filteredTotals = useMemo(() => {
-    if (!filteredWeeks.length) return { totalRevenue: 0, coShare: 0, teacherShare: 0, lessonShare: 0 };
-    return filteredWeeks.reduce(
-      (acc, w) => {
-        acc.totalRevenue += w.totalRevenue;
-        acc.coShare += w.coShare;
-        acc.teacherShare += w.teacherShare;
-        acc.lessonShare += w.lessonShare;
-        return acc;
-      },
-      { totalRevenue: 0, coShare: 0, teacherShare: 0, lessonShare: 0 }
-    );
+    if (!filteredWeeks.length) return { totalRevenue: 0, coShare: 0, teacherShare: 0 };
+    return filteredWeeks.reduce((acc, w) => ({
+      totalRevenue: acc.totalRevenue + w.totalRevenue,
+      coShare: acc.coShare + w.coShare,
+      teacherShare: acc.teacherShare + w.teacherShare
+    }), { totalRevenue: 0, coShare: 0, teacherShare: 0 });
   }, [filteredWeeks]);
 
-  const kpis = billing
-    ? [
-        { title: "Total Revenue", value: formatPHP(filteredTotals.totalRevenue) },
-        { title: "CO Share", value: formatPHP(filteredTotals.coShare) },
-        { title: "Teacher Share", value: formatPHP(filteredTotals.teacherShare) },
-        { title: "Lesson Share", value: formatPHP(filteredTotals.lessonShare) },
-        { title: "Weekly Billed", value: formatPHP(filteredTotals.totalRevenue) },
-      ]
-    : [];
+  const downloadLabel = filterType === 'week' ? 'Download week earnings' : 'Download monthly earnings';
+
+  const downloadFiltered = () => {
+    downloadBillingPdf({
+      centerName: activeCenter?.name,
+      periods: filteredWeeks,
+      totals: filteredTotals,
+    });
+  };
+
+  const downloadWeek = (w) => {
+    downloadBillingPdf({
+      centerName: activeCenter?.name,
+      periods: [w],
+      totals: {
+        totalRevenue: w.totalRevenue,
+        coShare: w.coShare,
+        teacherShare: w.teacherShare,
+      },
+    });
+  };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-[22px] font-extrabold text-slate-800">Billing</h1>
-        <p className="mt-1 text-sm text-slate-500">Weekly billing statement and revenue breakdown.</p>
+    <div className="space-y-6 relative z-0">
+      <div className="space-y-3">
+        <div className="animate-in fade-in slide-in-from-top-4 duration-700">
+          <div className="flex items-center gap-3">
+            <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-900 via-yellow-600 to-orange-500 bg-clip-text text-transparent">
+              Earnings
+            </h1>
+            <Badge variant="yellow">Financial Overview</Badge>
+          </div>
+          <p className="mt-3 text-base lg:text-lg text-slate-600 font-medium">
+            Weekly statements and revenue breakdowns
+          </p>
+        </div>
+        <CenterSelectorBar />
       </div>
 
-      <CenterSelectorBar />
-
-      {billing && (
-        <section className="rounded-2xl bg-white px-6 py-6 shadow-sm ring-1 ring-slate-200 mb-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="space-y-2">
-              <div className="text-sm font-semibold text-slate-800">Select month</div>
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <select
-                  value={filterMonth}
-                  onChange={(e) => setFilterMonth(e.target.value)}
-                  className="min-w-[180px] rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors"
-                >
-                  {monthNames.map((month) => (
-                    <option key={month} value={month}>
-                      {month}
-                    </option>
-                  ))}
-                </select>
-                <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                  <span className="h-2 w-2 rounded-full bg-blue-500" />
-                  Viewing {filterMonth}
-                </span>
+      {!needsCenter && (
+        <section className="relative z-40 rounded-2xl bg-gradient-to-br from-white to-yellow-50/30 shadow-md border border-blue-200/60 backdrop-blur-sm animate-in fade-in slide-in-from-top-4 duration-700 delay-100 pb-12">
+          <div className="px-6 py-5">
+            <div className="flex items-center gap-4 mb-2">
+              <div className="h-12 w-12 flex items-center justify-center rounded-xl bg-gradient-to-br from-yellow-100 to-yellow-50 border border-yellow-200">
+                <PesoSignIcon className="h-6 w-6 text-yellow-700" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-lg font-bold bg-gradient-to-r from-blue-900 to-yellow-700 bg-clip-text text-transparent">
+                  TPCAP Center - Manila
+                </div>
+                <div className="text-xs font-medium text-slate-500">Earnings Active</div>
+              </div>
+              <div className="ml-auto flex items-center gap-2">
+                <Badge variant="blue">PHP</Badge>
               </div>
             </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => {
-                  downloadBillingPdf({
-                    centerName: activeCenter?.name,
-                    periods: filteredWeeks,
-                    totals: filteredTotals,
-                  });
-                }}
-                className="inline-flex items-center gap-2 rounded-lg bg-yellow-500 px-6 py-3 text-sm font-semibold text-blue-900 shadow-sm hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 transition-colors"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Download monthly bill
-              </button>
-              <span className="text-xs text-slate-500">Only includes weeks in the selected month.</span>
+            <div className="pl-16 relative z-50">
+              <DashboardDateFilter onFilterChange={handleFilterChange} initialFilterType="month" />
             </div>
           </div>
         </section>
       )}
 
       {needsCenter ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-          Select a center to view billing data.
+        <section className="rounded-2xl border border-blue-200/60 bg-gradient-to-br from-blue-50/80 via-white to-yellow-50/50 p-6 text-base text-slate-700 font-medium shadow-md backdrop-blur-sm animate-in fade-in slide-in-from-top-4 duration-700 z-0">
+          <div className="flex items-center gap-3">
+            <BuildingIcon className="w-6 h-6 text-blue-600 flex-shrink-0" />
+            Select a center to view earnings data.
+          </div>
         </section>
       ) : null}
 
-      {billing ? (
-        <>
-          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {kpis.map((k) => {
-              const v = kpiVisual(k.title);
-              return (
-                <KpiCard
-                  key={k.title}
-                  title={k.title}
-                  value={k.value}
-                  subtitle={k.subtitle}
-                  icon={v.icon}
-                  variant={v.variant}
-                />
-              );
-            })}
-          </section>
-
-          <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
-            <div className="border-b border-slate-200 px-5 py-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <div className="text-sm font-semibold text-slate-800">Weekly Billing Breakdown</div>
-                  <div className="mt-0.5 text-xs text-slate-500">{activeCenter?.name}</div>
-                </div>
-                <Badge variant="blue">PHP</Badge>
+      {billing && filteredWeeks.length > 0 && (
+        <section className="overflow-hidden rounded-2xl bg-white/80 shadow-lg ring-1 ring-slate-200/50 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4 duration-700 delay-400 relative z-10 -mt-16 pt-24">
+          <div className="border-b border-slate-200/50 px-6 py-4 bg-gradient-to-r from-blue-50/50 to-yellow-50/30">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-lg font-bold text-slate-900">Weekly Earnings Breakdown</div>
+                <div className="mt-1 text-sm text-slate-600">TPCAP Center - Manila</div>
               </div>
+              <Badge variant="yellow">Filtered View</Badge>
             </div>
+          </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="sticky top-0 z-10 bg-white/90 text-[11px] font-bold uppercase tracking-wide text-slate-500 shadow-sm">
-                  <tr>
-                    <th className="px-4 py-3">Week</th>
-                    <th className="px-4 py-3 text-right">Total Revenue</th>
-                    <th className="px-4 py-3 text-right">CO Share</th>
-                    <th className="px-4 py-3 text-right">Teacher Share</th>
-                    <th className="px-4 py-3">Download</th>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 z-20 bg-white/95 text-xs font-bold uppercase tracking-wide text-slate-500 shadow-sm backdrop-blur-sm">
+                <tr>
+                  <th className="px-6 py-4 text-left">Week</th>
+                  <th className="px-6 py-4 text-right">Total Revenue</th>
+                  <th className="px-6 py-4 text-right">CO Earnings</th>
+                  <th className="px-6 py-4 text-right">Teacher Earnings</th>
+                  <th className="px-6 py-4 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredWeeks.map((w) => (
+                  <tr key={w.week} className="hover:bg-slate-50/50 transition-colors text-slate-700">
+                    <td className="px-6 py-4 font-semibold text-slate-900">{w.week}</td>
+                    <td className="px-6 py-4 text-right font-mono font-semibold text-yellow-700 tabular-nums">
+                      {formatPHP(w.totalRevenue)}
+                    </td>
+                    <td className="px-6 py-4 text-right font-mono text-blue-700 tabular-nums">{formatPHP(w.coShare)}</td>
+                    <td className="px-6 py-4 text-right font-mono text-green-700 tabular-nums">
+                      {formatPHP(w.teacherShare)}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button
+                        onClick={() => downloadWeek(w)}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:shadow-md hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                      >
+                        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Download
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filteredWeeks.map((w) => (
-                    <tr key={w.week} className="text-slate-700 even:bg-slate-50 hover:bg-slate-100">
-                      <td className="px-4 py-3 font-semibold text-slate-800">{w.week}</td>
-                      <td className="px-4 py-3 text-right font-mono font-semibold tabular-nums text-blue-700">
-                        {formatPHP(w.totalRevenue)}
+                ))}
+                {filteredWeeks.length > 1 && (
+                  <>
+                    <tr className="bg-gradient-to-r from-yellow-50/80 to-orange-50/80 border-t-2 border-yellow-200 font-bold text-slate-900">
+                      <td className="px-6 py-4 text-base font-extrabold" colSpan={4}>
+                        Total ({filterType.toUpperCase()})
                       </td>
-                      <td className="px-4 py-3 text-right font-mono tabular-nums text-blue-700">{formatPHP(w.coShare)}</td>
-                      <td className="px-4 py-3 text-right font-mono tabular-nums text-blue-700">
-                        {formatPHP(w.teacherShare)}
-                      </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-6 py-4 text-right">
                         <button
-                          onClick={() => {
-                            downloadBillingPdf({
-                              centerName: activeCenter?.name,
-                              periods: [w],
-                              totals: {
-                                totalRevenue: w.totalRevenue,
-                                coShare: w.coShare,
-                                teacherShare: w.teacherShare,
-                                lessonShare: w.lessonShare,
-                              },
-                            });
-                          }}
-                          className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors"
+                          onClick={downloadFiltered}
+                          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 px-6 py-2 text-sm font-semibold text-yellow-900 shadow-lg hover:shadow-xl hover:from-yellow-400 hover:to-orange-400 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 transition-all duration-200"
                         >
-                          Download
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          {downloadLabel}
                         </button>
                       </td>
                     </tr>
-                  ))}
-
-                  <tr className="bg-gradient-to-r from-blue-50 to-indigo-50 font-extrabold text-slate-900 border-t-2 border-blue-200">
-                    <td className="px-4 py-4 text-lg" colSpan={5}>
-                      Monthly Bill Total
-                    </td>
-                  </tr>
-                  <tr className="bg-blue-50/80 font-extrabold text-slate-900">
-                    <td className="px-4 py-3"></td>
-                    <td className="px-4 py-3 text-right font-mono tabular-nums text-blue-700">
-                      {formatPHP(filteredTotals.totalRevenue)}
-                    </td>
-                    <td className="px-4 py-3 text-right font-mono tabular-nums text-blue-700">
-                      {formatPHP(filteredTotals.coShare)}
-                    </td>
-                    <td className="px-4 py-3 text-right font-mono tabular-nums text-blue-700">
-                      {formatPHP(filteredTotals.teacherShare)}
-                    </td>
-                    <td className="px-4 py-3"></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </>
-      ) : null}
+                    <tr className="bg-gradient-to-r from-yellow-100 to-orange-100/50 font-extrabold text-slate-900">
+                      <td className="px-6 py-4"></td>
+                      <td className="px-6 py-4 text-right font-mono font-bold tabular-nums text-yellow-800">
+                        {formatPHP(filteredTotals.totalRevenue)}
+                      </td>
+                      <td className="px-6 py-4 text-right font-mono font-bold tabular-nums text-blue-800">
+                        {formatPHP(filteredTotals.coShare)}
+                      </td>
+                      <td className="px-6 py-4 text-right font-mono font-bold tabular-nums text-green-800">
+                        {formatPHP(filteredTotals.teacherShare)}
+                      </td>
+                      <td className="px-6 py-4"></td>
+                    </tr>
+                  </>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
