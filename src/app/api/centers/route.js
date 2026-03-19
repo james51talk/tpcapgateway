@@ -1,7 +1,8 @@
 import { query } from "@/lib/mysql";
 import { mockCenters } from "@/lib/mockCenters";
 
-const useDbCenters = process.env.USE_DB_CENTERS === "true";
+const hasDbEnv = Boolean(process.env.DB_HOST && process.env.DB_NAME && process.env.DB_USER);
+const useDbCenters = process.env.USE_DB_CENTERS !== "false" && hasDbEnv;
 
 export async function GET() {
   if (!useDbCenters) {

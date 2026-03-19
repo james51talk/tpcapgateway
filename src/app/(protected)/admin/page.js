@@ -27,6 +27,11 @@ export default function AdminPage() {
   const [addingCenter, setAddingCenter] = useState(false);
   const [resetPasswordFor, setResetPasswordFor] = useState(null);
 
+  const islandOptions = useMemo(() => {
+    const unique = [...new Set(centers.map((c) => c.island).filter(Boolean))];
+    return unique.sort();
+  }, [centers]);
+
   const filteredCenters = useMemo(() => {
     if (!islandFilter) return centers;
     return centers.filter(c => c.island === islandFilter);
@@ -187,9 +192,11 @@ export default function AdminPage() {
         >
 
           <option value="">All Islands</option>
-          <option value="Luzon">Luzon</option>
-          <option value="Visayas">Visayas</option>
-          <option value="Mindanao">Mindanao</option>
+          {islandOptions.map((island) => (
+            <option key={island} value={island}>
+              {island}
+            </option>
+          ))}
 
         </select>
       </section>
