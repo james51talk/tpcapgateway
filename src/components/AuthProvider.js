@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { clearSession, saveSession, SESSION_KEY } from "@/lib/session";
+import { clearSession, loadSession, saveSession, SESSION_KEY } from "@/lib/session";
 
 const AuthContext = createContext(null);
 
@@ -18,7 +18,7 @@ function readJSON(key) {
 export function AuthProvider({ children }) {
   const [centers, setCenters] = useState([]);
   const [accounts, setAccounts] = useState([]);
-  const [session, setSession] = useState(() => typeof window === "undefined" ? null : null);
+  const [session, setSession] = useState(() => (typeof window === "undefined" ? null : loadSession()));
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -73,9 +73,11 @@ export function AuthProvider({ children }) {
     };
 
     window.addEventListener("storage", handler);
+    window.addEventListener("tpcap:store", handler);
 
     return () => {
       window.removeEventListener("storage", handler);
+      window.removeEventListener("tpcap:store", handler);
     };
   }, []);
 
@@ -109,14 +111,18 @@ export function AuthProvider({ children }) {
           selectedCenterId: match.role === "admin" ? null : match.centerId ?? null,
         };
         saveSession(nextSession);
+        setSession(nextSession);
         return { ok: true };
       },
       logout: () => {
         clearSession();
+        setSession(null);
       },
       selectCenter: (centerId) => {
         if (!session || session.role !== "admin") return;
-        saveSession({ ...session, selectedCenterId: centerId || null });
+        const nextSession = { ...session, selectedCenterId: centerId || null };
+        saveSession(nextSession);
+        setSession(nextSession);
       },
       refreshData: async () => {
         // To refresh centers and accounts after changes

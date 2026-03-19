@@ -8,7 +8,7 @@ export default function CenterSelectorBar({ className = "" }) {
   const { session, centers, activeCenterId, selectCenter } = useAuth();
   const [selectedIsland, setSelectedIsland] = useState("");
 
-  if (session?.role !== "admin") return null;
+  const isAdmin = session?.role === "admin";
 
   const islands = useMemo(() => {
     const unique = [...new Set(centers.map(c => c.island).filter(Boolean))];
@@ -23,10 +23,12 @@ export default function CenterSelectorBar({ className = "" }) {
   const handleIslandChange = (island) => {
     setSelectedIsland(island);
     // If current active center is not in the new filtered list, reset selection
-    if (activeCenterId && !filteredCenters.find(c => c.id === activeCenterId)) {
-      selectCenter(null);
-    }
+    if (!activeCenterId) return;
+    const nextFilteredCenters = island ? centers.filter(c => c.island === island) : centers;
+    if (!nextFilteredCenters.find(c => c.id === activeCenterId)) selectCenter(null);
   };
+
+  if (!isAdmin) return null;
 
   return (
     <div

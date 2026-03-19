@@ -1,6 +1,16 @@
+import { mockAccounts } from "@/lib/mockAccounts";
 import { query } from "@/lib/mysql";
 
+const useDbAccounts = process.env.USE_DB_ACCOUNTS === "true";
+
 export async function GET() {
+  if (!useDbAccounts) {
+    return new Response(JSON.stringify(mockAccounts), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const accounts = await query("SELECT account_id AS id, username, password, role, center_id AS centerId FROM accounts");
     return new Response(JSON.stringify(accounts), {
@@ -9,14 +19,21 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Error fetching accounts:", error);
-    return new Response(JSON.stringify({ error: "Failed to fetch accounts" }), {
-      status: 500,
+    return new Response(JSON.stringify(mockAccounts), {
+      status: 200,
       headers: { "Content-Type": "application/json" },
     });
   }
 }
 
 export async function POST(request) {
+  if (!useDbAccounts) {
+    return new Response(JSON.stringify({ error: "Accounts are running in code-only mode." }), {
+      status: 501,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const { username, password, role, centerId } = await request.json();
     const result = await query(

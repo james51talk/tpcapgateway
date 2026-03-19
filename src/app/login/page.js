@@ -74,6 +74,8 @@ export default function LoginPage() {
                   setSubmitting(false);
                   return;
                 }
+                router.replace("/");
+                router.refresh();
               }}
             >
               {/* Username Field */}

@@ -131,7 +131,7 @@ export default function AppShell({ children }) {
             <button
               onClick={() => {
                 logout();
-                router.replace("/login");
+                window.location.assign("/login");
               }}
               className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-white/20 bg-transparent text-sm font-semibold text-white/80 hover:bg-white/10"
             >
@@ -171,7 +171,7 @@ export default function AppShell({ children }) {
               <button
                 onClick={() => {
                   logout();
-                  router.replace("/login");
+                  window.location.assign("/login");
                 }}
                 className="hidden h-10 items-center justify-center gap-2 rounded-lg border border-blue-200/50 bg-gradient-to-r from-blue-50 to-yellow-50/30 px-3 text-sm font-semibold text-slate-900 hover:bg-blue-100/50 sm:flex transition-colors"
               >
@@ -186,7 +186,7 @@ export default function AppShell({ children }) {
               <button
                 onClick={() => {
                   logout();
-                  router.replace("/login");
+                  window.location.assign("/login");
                 }}
                 className="sm:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-blue-200/50 bg-white text-blue-700 hover:bg-blue-50 transition-colors"
                 aria-label="Sign out"

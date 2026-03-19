@@ -265,3 +265,34 @@ export function getBillingData(centerId) {
   return { weeks, totals, weeklyBilled };
 }
 
+export function getCenterProfile(centerId, centerName) {
+  const seed = hashString(centerId || "none");
+
+  const firstNames = ["Alex", "Jamie", "Sam", "Taylor", "Jordan", "Morgan", "Casey", "Riley"];
+  const lastNames = ["Reyes", "Santos", "Garcia", "Dela Cruz", "Mendoza", "Torres", "Flores", "Navarro"];
+  const cities = ["Quezon City", "Makati", "Pasig", "Cebu City", "Davao City", "Iloilo City", "Bacolod", "Cagayan de Oro"];
+  const streets = ["Quezon Ave", "Ortigas Ave", "Ayala Ave", "Roxas Blvd", "Bonifacio St", "Rizal St", "Osmeña Blvd", "National Hwy"];
+
+  const ownerFirst = firstNames[pickNumber(seed ^ 0x101, 0, firstNames.length - 1)];
+  const ownerLast = lastNames[pickNumber(seed ^ 0x202, 0, lastNames.length - 1)];
+  const owner = `${ownerFirst} ${ownerLast}`;
+
+  const city = cities[pickNumber(seed ^ 0x303, 0, cities.length - 1)];
+  const street = streets[pickNumber(seed ^ 0x404, 0, streets.length - 1)];
+  const number = pickNumber(seed ^ 0x505, 10, 999);
+  const address = `${number} ${street}, ${city}`;
+
+  const emailUser = `${ownerFirst}.${ownerLast}`.toLowerCase();
+  const ownerEmail = `${emailUser}@tpcap.co`;
+
+  const ownerPhone = `+63 9${pickNumber(seed ^ 0x606, 10, 99)} ${pickNumber(seed ^ 0x707, 100, 999)} ${pickNumber(seed ^ 0x808, 1000, 9999)}`;
+
+  return {
+    owner,
+    ownerEmail,
+    ownerPhone,
+    location: centerName || "",
+    address,
+  };
+}
+

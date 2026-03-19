@@ -1,11 +1,12 @@
 "use client";
 
 import { useAuth } from '@/components/AuthProvider';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { BuildingIcon, UserIcon, UsersIcon } from '@/components/Icons';
 import Badge from '@/components/Badge';
 import CenterSelectorBar from '@/components/CenterSelectorBar';
 import KpiCard from '@/components/KpiCard';
+import { getCenterProfile, getDashboardKpis } from '@/lib/metrics';
 
 function kpiVisual(title) {
   switch (title) {
@@ -24,26 +25,24 @@ export default function CenterInformationPage() {
   const { activeCenter, activeCenterId, session } = useAuth();
   const [editing, setEditing] = useState(false);
   const [centerData, setCenterData] = useState({
-    owner: 'John Doe',
-    ownerEmail: 'john.doe@tpcap.co',
-    ownerPhone: '+63 917 123 4567',
+    owner: '',
+    ownerEmail: '',
+    ownerPhone: '',
     location: '',
-    address: 'Quezon Ave, Quezon City, Metro Manila 1100',
+    address: '',
   });
   const [photoFiles, setPhotoFiles] = useState([]);
-
-  useEffect(() => {
-    if (activeCenter) {
-      setCenterData(prev => ({
-        ...prev,
-        location: activeCenter.name,
-      }));
-    }
-  }, [activeCenter]);
 
   const handleSave = () => {
     console.log('Saved:', centerData);
     setEditing(false);
+  };
+
+  const handleEditToggle = () => {
+    if (!editing) {
+      setCenterData(profile);
+    }
+    setEditing((prev) => !prev);
   };
 
   const handlePhotoUpload = (e) => {
@@ -53,10 +52,32 @@ export default function CenterInformationPage() {
 
   const needsCenter = session?.role === "admin" && !activeCenterId;
 
+  const profile = getCenterProfile(activeCenterId, activeCenter?.name);
+  const dashboard = needsCenter ? null : getDashboardKpis(activeCenterId);
+  const statByTitle = new Map((dashboard?.kpis ?? []).map((k) => [k.title, k]));
+
   const stats = [
-    { title: "Active Onlist", value: "124", subtitle: "Current", icon: <UsersIcon className="h-5 w-5" />, variant: "blue" },
-    { title: "Overall Onlist", value: "156", subtitle: "All time", icon: <UserIcon className="h-5 w-5" />, variant: "blue" },
-    { title: "Center Capacity", value: "200", subtitle: "Max", icon: <BuildingIcon className="h-5 w-5" />, variant: "blue" },
+    {
+      title: "Active Onlist",
+      value: statByTitle.get("Active Onlist")?.value ?? "0",
+      subtitle: "Current",
+      icon: <UsersIcon className="h-5 w-5" />,
+      variant: "blue",
+    },
+    {
+      title: "Overall Onlist",
+      value: statByTitle.get("Overall Onlist")?.value ?? "0",
+      subtitle: "All time",
+      icon: <UserIcon className="h-5 w-5" />,
+      variant: "blue",
+    },
+    {
+      title: "Center Capacity",
+      value: statByTitle.get("Center Capacity")?.value ?? "0%",
+      subtitle: "Max",
+      icon: <BuildingIcon className="h-5 w-5" />,
+      variant: "blue",
+    },
   ];
 
   if (needsCenter) {
@@ -123,7 +144,7 @@ export default function CenterInformationPage() {
             </div>
           </div>
           <button
-            onClick={() => setEditing(!editing)}
+            onClick={handleEditToggle}
             className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
           >
             {editing ? 'Cancel' : 'Edit'} 
@@ -142,7 +163,7 @@ export default function CenterInformationPage() {
               <div>
                 <label className="block text-sm font-semibold text-slate-600 mb-2">Full Name</label>
                 <input 
-                  value={centerData.owner}
+                  value={editing ? centerData.owner : profile.owner}
                   onChange={(e) => setCenterData(prev => ({...prev, owner: e.target.value}))}
                   className={`w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 transition-all text-slate-900 ${editing ? 'focus:border-blue-500' : 'bg-slate-50 cursor-not-allowed border-slate-300'}`}
                   disabled={!editing}
@@ -152,7 +173,7 @@ export default function CenterInformationPage() {
                 <div>
                   <label className="block text-sm font-semibold text-slate-600 mb-2">Email</label>
                   <input 
-                    value={centerData.ownerEmail}
+                    value={editing ? centerData.ownerEmail : profile.ownerEmail}
                     onChange={(e) => setCenterData(prev => ({...prev, ownerEmail: e.target.value}))}
                     className={`w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 transition-all text-slate-900 ${editing ? 'focus:border-blue-500' : 'bg-slate-50 cursor-not-allowed border-slate-300'}`}
                     disabled={!editing}
@@ -161,7 +182,7 @@ export default function CenterInformationPage() {
                 <div>
                   <label className="block text-sm font-semibold text-slate-600 mb-2">Phone</label>
                   <input 
-                    value={centerData.ownerPhone}
+                    value={editing ? centerData.ownerPhone : profile.ownerPhone}
                     onChange={(e) => setCenterData(prev => ({...prev, ownerPhone: e.target.value}))}
                     className={`w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 transition-all text-slate-900 ${editing ? 'focus:border-blue-500' : 'bg-slate-50 cursor-not-allowed border-slate-300'}`}
                     disabled={!editing}
@@ -182,7 +203,7 @@ export default function CenterInformationPage() {
               <div>
                 <label className="block text-sm font-semibold text-slate-600 mb-2">Location Name</label>
                 <input 
-                  value={centerData.location}
+                  value={editing ? centerData.location : profile.location}
                   onChange={(e) => setCenterData(prev => ({...prev, location: e.target.value}))}
                   className={`w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-emerald-500 transition-all text-slate-900 ${editing ? 'focus:border-emerald-500' : 'bg-slate-50 cursor-not-allowed border-slate-300'}`}
                   disabled={!editing}
@@ -192,7 +213,7 @@ export default function CenterInformationPage() {
                 <label className="block text-sm font-semibold text-slate-600 mb-2">Full Address</label>
                 <textarea 
                   rows="3"
-                  value={centerData.address}
+                  value={editing ? centerData.address : profile.address}
                   onChange={(e) => setCenterData(prev => ({...prev, address: e.target.value}))}
                   className={`w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-emerald-500 transition-all resize-vertical text-slate-900 ${editing ? 'focus:border-emerald-500' : 'bg-slate-50 cursor-not-allowed border-slate-300'}`}
                   disabled={!editing}

@@ -101,7 +101,7 @@ export default function EarningsPage() {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-lg font-bold bg-gradient-to-r from-blue-900 to-yellow-700 bg-clip-text text-transparent">
-                  TPCAP Center - Manila
+                  {activeCenter?.name || "Center"}
                 </div>
                 <div className="text-xs font-medium text-slate-500">Earnings Active</div>
               </div>
@@ -131,7 +131,7 @@ export default function EarningsPage() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <div className="text-lg font-bold text-slate-900">Weekly Earnings Breakdown</div>
-                <div className="mt-1 text-sm text-slate-600">TPCAP Center - Manila</div>
+                <div className="mt-1 text-sm text-slate-600">{activeCenter?.name || "Center"}</div>
               </div>
               <Badge variant="yellow">Filtered View</Badge>
             </div>
