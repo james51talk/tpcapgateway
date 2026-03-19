@@ -21,12 +21,14 @@ export default function LoginPage() {
   if (!loading && session) return <div className="min-h-screen bg-gradient-to-br from-blue-50 to-yellow-50" />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-700 to-yellow-400 px-4 py-6 flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-700 to-yellow-400 px-4 py-6 flex flex-col items-center justify-center relative overflow-hidden">
       {/* Decorative background elements */}
       <div className="absolute top-10 right-10 w-48 h-48 bg-yellow-300/20 rounded-full blur-3xl"></div>
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl"></div>
-      
-\n      <div className="mx-auto w-full max-w-[900px] relative z-10">\n        <div className="flex flex-col lg:flex-row w-full overflow-hidden rounded-3xl bg-white shadow-2xl border border-white/20 backdrop-blur-xl">\n
+
+      <div className="mx-auto w-full max-w-[900px] relative z-10">
+        <div className="flex flex-col lg:flex-row w-full overflow-hidden rounded-3xl bg-white shadow-2xl border border-white/20 backdrop-blur-xl">
+
           {/* Left Panel - Branding */}
           <div className="hidden lg:flex lg:w-2/5 flex-col justify-between bg-gradient-to-br from-blue-600 via-blue-700 to-blue-900 px-8 py-12 text-white relative overflow-hidden">
             {/* Decorative elements */}
@@ -210,10 +212,9 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div className="mt-8 text-center text-xs text-white/80 font-medium animate-in fade-in duration-1000 delay-500">
-          <p>© 2026 TPCAP-CO. All rights reserved.</p>
+          <p>Ã‚Â© 2026 TPCAP-CO. All rights reserved.</p>
         </div>
       </div>
     </div>
   );
 }
-
