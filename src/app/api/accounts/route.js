@@ -3,9 +3,16 @@ import { query } from "@/lib/mysql";
 
 const useDbAccounts = process.env.USE_DB_ACCOUNTS === "true";
 
+function getAccountStore() {
+  if (!globalThis.__mockAccountsStore) {
+    globalThis.__mockAccountsStore = structuredClone(mockAccounts);
+  }
+  return globalThis.__mockAccountsStore;
+}
+
 export async function GET() {
   if (!useDbAccounts) {
-    return new Response(JSON.stringify(mockAccounts), {
+    return new Response(JSON.stringify(getAccountStore()), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
@@ -19,7 +26,7 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Error fetching accounts:", error);
-    return new Response(JSON.stringify(mockAccounts), {
+    return new Response(JSON.stringify(getAccountStore()), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
@@ -28,8 +35,19 @@ export async function GET() {
 
 export async function POST(request) {
   if (!useDbAccounts) {
-    return new Response(JSON.stringify({ error: "Accounts are running in code-only mode." }), {
-      status: 501,
+    const { username, password, role, centerId } = await request.json();
+    const store = getAccountStore();
+    const maxId = store.reduce((m, a) => (typeof a.id === "number" ? Math.max(m, a.id) : m), 0);
+    const next = {
+      id: maxId + 1,
+      username,
+      password,
+      role,
+      centerId: centerId ?? null,
+    };
+    store.push(next);
+    return new Response(JSON.stringify(next), {
+      status: 201,
       headers: { "Content-Type": "application/json" },
     });
   }

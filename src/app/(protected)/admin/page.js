@@ -80,27 +80,59 @@ export default function AdminPage() {
     }
   };
 
-  const handleAddCenter = async (name, island, username, password) => {
+  const upsertOwner = async (centerId, ownerUsername) => {
+    const normalized = String(ownerUsername || "").trim();
+    if (!normalized) return;
+
+    const existing = accounts.find(
+      (a) => a.role === "center_owner" && String(a.centerId) === String(centerId),
+    );
+
+    if (existing) {
+      const res = await fetch(`/api/accounts/${existing.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: existing.id, username: normalized }),
+      });
+      if (!res.ok) throw new Error("Failed to update owner");
+      return existing;
+    }
+
+    const res = await fetch("/api/accounts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: normalized,
+        password: "owner123",
+        role: "center_owner",
+        centerId: String(centerId),
+      }),
+    });
+    if (!res.ok) throw new Error("Failed to create owner");
+    return await res.json();
+  };
+
+  const handleAddCenter = async (centerId, name, island, username, password) => {
     try {
       const centerRes = await fetch("/api/centers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, island }),
+        body: JSON.stringify({ id: String(centerId || "").trim(), name, island }),
       });
       if (!centerRes.ok) throw new Error("Failed to add center");
       const newCenter = await centerRes.json();
 
-      const accountRes = await fetch("/api/accounts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password, role: "center_owner", centerId: newCenter.id }),
-      });
-      if (accountRes.ok) {
-        await refreshData();
-        setAddingCenter(false);
-      } else {
-        alert("Failed to add account");
+      const owner = await upsertOwner(newCenter.id, username);
+      if (owner && password && password !== "owner123") {
+        await fetch(`/api/accounts/${owner.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: owner.id, password }),
+        });
       }
+
+      await refreshData();
+      setAddingCenter(false);
     } catch (error) {
       console.error("Error adding center:", error);
       alert("Error adding center");
@@ -274,7 +306,19 @@ export default function AdminPage() {
       {editingCenter && (
         <EditCenterModal
           center={editingCenter}
-          onSave={handleSaveCenter}
+          owner={getCenterOwner(editingCenter.id)}
+          onSave={async (id, name, island, ownerUsername) => {
+            try {
+              await handleSaveCenter(id, name, island);
+              if (ownerUsername != null) {
+                await upsertOwner(id, ownerUsername);
+                await refreshData();
+              }
+            } catch (e) {
+              console.error(e);
+              alert("Failed to save changes");
+            }
+          }}
           onClose={() => setEditingCenter(null)}
         />
       )}
@@ -297,13 +341,14 @@ export default function AdminPage() {
   );
 }
 
-function EditCenterModal({ center, onSave, onClose }) {
+function EditCenterModal({ center, owner, onSave, onClose }) {
   const [name, setName] = useState(center.name);
   const [island, setIsland] = useState(center.island);
+  const [ownerUsername, setOwnerUsername] = useState(owner?.username || "");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave(center.id, name, island);
+    onSave(center.id, name, island, ownerUsername);
   };
 
   return (
@@ -333,6 +378,16 @@ function EditCenterModal({ center, onSave, onClose }) {
               <option value="Mindanao">Mindanao</option>
             </select>
           </div>
+          <div>
+            <label className="block text-sm font-medium text-zinc-700">Owner Username</label>
+            <input
+              value={ownerUsername}
+              onChange={(e) => setOwnerUsername(e.target.value)}
+              className="mt-1 h-11 w-full rounded-xl border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-blue-600"
+              placeholder="e.g. owner.lucena"
+              required
+            />
+          </div>
           <div className="flex gap-3">
             <button
               type="submit"
@@ -355,6 +410,7 @@ function EditCenterModal({ center, onSave, onClose }) {
 }
 
 function AddCenterModal({ onSave, onClose }) {
+  const [centerId, setCenterId] = useState("");
   const [name, setName] = useState("");
   const [island, setIsland] = useState("Luzon");
   const [username, setUsername] = useState("");
@@ -362,7 +418,7 @@ function AddCenterModal({ onSave, onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave(name, island, username, password);
+    onSave(centerId, name, island, username, password);
   };
 
   return (
@@ -370,6 +426,15 @@ function AddCenterModal({ onSave, onClose }) {
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-lg">
         <h2 className="text-lg font-semibold">Add New Center & Owner</h2>
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-zinc-700">Center ID</label>
+            <input
+              value={centerId}
+              onChange={(e) => setCenterId(e.target.value)}
+              className="mt-1 h-11 w-full rounded-xl border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-blue-600"
+              required
+            />
+          </div>
           <div>
             <label className="block text-sm font-medium text-zinc-700">Center Name</label>
             <input

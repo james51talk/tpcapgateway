@@ -36,10 +36,17 @@ export async function POST(request) {
   }
 
   try {
-    const { name, island } = await request.json();
-    const result = await query("INSERT INTO centers (center_name, center_island) VALUES (?, ?)", [name, island]);
+    const { id, name, island } = await request.json();
+    const hasId = typeof id === "string" && id.trim().length > 0;
+    const result = hasId
+      ? await query("INSERT INTO centers (center_id, center_name, center_island) VALUES (?, ?, ?)", [
+          id.trim(),
+          name,
+          island,
+        ])
+      : await query("INSERT INTO centers (center_name, center_island) VALUES (?, ?)", [name, island]);
     const newCenter = {
-      id: result.insertId,
+      id: hasId ? id.trim() : String(result.insertId),
       name,
       island,
     };
