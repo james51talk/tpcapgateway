@@ -30,26 +30,22 @@ export default function LoginPage() {
         <div className="flex flex-col lg:flex-row w-full overflow-hidden rounded-3xl bg-white shadow-2xl border border-white/20 backdrop-blur-xl">
 
           {/* Left Panel - Branding */}
-          <div className="hidden lg:flex lg:w-2/5 flex-col justify-between bg-gradient-to-br from-blue-600 via-blue-700 to-blue-900 px-8 py-12 text-white relative overflow-hidden">
+          <div className="hidden lg:flex lg:w-2/5 flex-col items-center justify-center bg-gradient-to-br from-blue-600 via-blue-700 to-blue-900 px-8 py-12 text-white relative overflow-hidden text-center">
             {/* Decorative elements */}
             <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-300/20 rounded-full -mr-20 -mt-20"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-yellow-300/20 rounded-full -ml-16 -mb-16"></div>
             
-            <div className="relative z-10">
-              <div className="text-4xl font-bold tracking-tight mb-2 animate-in fade-in slide-in-from-top-6 duration-700">TPCAP</div>
-              <div className="inline-block bg-yellow-300/30 backdrop-blur-sm rounded-full px-4 py-2 mb-4 border border-yellow-300/50 animate-in fade-in duration-700 delay-100">
-                <p className="text-sm font-bold text-yellow-100">Center Owner Portal</p>
-              </div>
-
-            </div>
-
-            <div className="relative z-10 flex items-center justify-center">
-              <div className="animate-in fade-in duration-1000 delay-300">
+            <div className="relative z-10 flex flex-col items-center">
+              <div className="animate-in fade-in duration-1000 delay-300 mb-6">
                 <img
-                  src="/logo.png"
+                  src="/51talklogo.png"
                   alt="Logo"
-                  className="h-24 w-24 object-contain drop-shadow-2xl hover:drop-shadow-3xl transition-all duration-300"
+                  className="h-36 w-36 object-contain drop-shadow-2xl hover:drop-shadow-3xl transition-all duration-300"
                 />
+              </div>
+              <div className="text-4xl font-bold tracking-tight mb-2 animate-in fade-in slide-in-from-top-6 duration-700">TPCAP</div>
+              <div className="inline-block bg-yellow-300/30 backdrop-blur-sm rounded-full px-4 py-2 border border-yellow-300/50 animate-in fade-in duration-700 delay-100">
+                <p className="text-sm font-bold text-yellow-100">Center Owner Portal</p>
               </div>
             </div>
           </div>
