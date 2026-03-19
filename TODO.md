@@ -1,29 +1,16 @@
-# Billing UI Improvements - TODO
+# Login Page Update Progress
 
-## Plan Breakdown (Approved)
-User confirmed: Apply all improvements using dashboard as reference.
-
-**Step 1: [COMPLETE ✅] Create TODO.md** - Track progress (done).
-
-**Step 2: [COMPLETE ✅] Edit src/app/(protected)/billing/page.js**
-- Integrate DashboardDateFilter.
-- Add animated gradient header and center card.
-- Enhance filter/actions section.
-- Polish KPIs grid with animations.
-- Improve table styling and totals.
-- Add animations, backdrop-blur, gradients.
-- Style empty/needsCenter states.
-
-**Step 3: [COMPLETE ✅] Test changes**  
-- Dev server started.  
-- Navigate to http://localhost:3000/billing (login/select center).  
-- Verified: Dashboard-style animations/gradients, DashboardDateFilter works (week/month toggle, filtering), KPIs update, table responsive/hover, PDF buttons functional (assumed), polished UI matching dashboard.
-- Run `npm run dev`.
-- Navigate to /billing.
-- Select center, test week/month filters, KPI updates, PDF downloads.
-- Check responsive design, animations.
-
-**Step 4: [COMPLETE ✅] Update TODO.md** - All steps done.
-
-Updated after each step.
+## Plan Steps:
+- [x] Create TODO.md for tracking
+- [x] Edit src/app/login/page.js:
+  - Remove "TPCAP-CO Portal" text
+  - Reduce main container max-w-[900px] → max-w-lg
+  - Shrink left panel: lg:w-5/12 → lg:w-2/5, py-16→py-12, px-12→px-8
+  - Fonts: text-5xl→text-4xl, text-4xl/lg:5xl→text-3xl/lg:4xl
+  - Logo: h-40 w-40 → h-24 w-24
+  - Form padding p-8→p-6
+  - Demo mt-12→mt-8, p-6→p-4
+  - Decorative circles w-72 h-72→w-48 h-48, w-96 h-96→w-64 h-64
+- [x] Test changes (npm run dev)
+- [x] Complete task
 
