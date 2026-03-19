@@ -212,7 +212,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div className="mt-8 text-center text-xs text-white/80 font-medium animate-in fade-in duration-1000 delay-500">
-          <p>ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© 2026 TPCAP-CO. All rights reserved.</p>
+          <p>2026 TPCAP-CO. All rights reserved.</p>
         </div>
       </div>
     </div>
