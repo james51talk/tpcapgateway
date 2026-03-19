@@ -181,35 +181,7 @@ export default function AdminPage() {
         </div>
       </div>
 
-      <section className="space-y-4 rounded-2xl bg-white shadow-sm ring-1 ring-zinc-200 p-6">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <div className="text-lg font-bold text-zinc-900">Select Center</div>
-            <div className="mt-1 text-sm text-zinc-600">
-              {activeCenterId ? `Selected: ${activeCenter?.name ?? activeCenterId}` : "No center selected yet"}
-            </div>
-          </div>
-        </div>
 
-        <CenterSelectorBar />
-
-        {activeCenterId ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {selectedCenterStats.map((k) => (
-              <KpiCard
-                key={k.title}
-                title={k.title}
-                value={k.value}
-                previous={k.previous}
-                subtitle={k.subtitle}
-                status={k.status}
-                icon={<UserIcon className="h-5 w-5" />}
-                variant="blue"
-              />
-            ))}
-          </div>
-        ) : null}
-      </section>
 
       {/* Styled Island Filter */}
       <section className="rounded-2xl bg-gradient-to-br from-blue-50 to-yellow-50/50 p-6 shadow-md border border-blue-200/60 backdrop-blur-sm animate-in fade-in slide-in-from-top-4 duration-700">
@@ -217,10 +189,10 @@ export default function AdminPage() {
           <BuildingIcon className="w-6 h-6 text-blue-600" />
           <label className="text-lg font-bold text-slate-900">Filter Islands</label>
         </div>
-        <select
+          <select
           value={islandFilter}
           onChange={(e) => setIslandFilter(e.target.value)}
-          className="mt-4 h-12 w-full max-w-md rounded-2xl border border-blue-200 bg-white/80 px-4 text-sm font-medium shadow-sm backdrop-blur-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200/50"
+          className="mt-4 h-12 w-full max-w-md rounded-2xl border border-blue-200 bg-white/80 px-4 text-sm font-medium text-black shadow-sm backdrop-blur-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200/50"
         >
 
           <option value="">All Islands</option>
