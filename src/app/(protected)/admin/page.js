@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Tabs from "@/components/Tabs";
 import { useAuth } from "@/components/AuthProvider";
-import { newId } from "@/lib/db";
+import Badge from "@/components/Badge";
+import { BuildingIcon, UserIcon } from "@/components/Icons";
+import KpiCard from "@/components/KpiCard";
 
 function Section({ title, children, right }) {
   return (
@@ -18,75 +19,187 @@ function Section({ title, children, right }) {
 }
 
 export default function AdminPage() {
-  const { db, updateDB } = useAuth();
-  const [tab, setTab] = useState("centers");
+  const { centers, accounts, refreshData } = useAuth();
+  const [islandFilter, setIslandFilter] = useState("");
+  const [editingCenter, setEditingCenter] = useState(null);
+  const [addingCenter, setAddingCenter] = useState(false);
+  const [resetPasswordFor, setResetPasswordFor] = useState(null);
+
+  const filteredCenters = useMemo(() => {
+    if (!islandFilter) return centers;
+    return centers.filter(c => c.island === islandFilter);
+  }, [centers, islandFilter]);
+
+  const getCenterOwner = (centerId) => {
+    return accounts.find(a => a.role === "center_owner" && a.centerId === centerId) || null;
+  };
+
+  // Compute KPIs
+  const totalCenters = filteredCenters.length;
+  const islandCounts = useMemo(() => {
+    const counts = { Luzon: 0, Visayas: 0, Mindanao: 0 };
+    filteredCenters.forEach(c => counts[c.island]++);
+    return counts;
+  }, [filteredCenters]);
+  const activeOwners = useMemo(() => filteredCenters.filter(c => getCenterOwner(c.id)).length, [filteredCenters]);
+
+  const handleEditCenter = async (center) => {
+    setEditingCenter(center);
+  };
+
+  const handleSaveCenter = async (id, name, island) => {
+    try {
+      const res = await fetch(`/api/centers/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, island }),
+      });
+      if (res.ok) {
+        await refreshData();
+        setEditingCenter(null);
+      } else {
+        alert("Failed to update center");
+      }
+    } catch (error) {
+      console.error("Error updating center:", error);
+      alert("Error updating center");
+    }
+  };
+
+  const handleAddCenter = async (name, island, username, password) => {
+    try {
+      const centerRes = await fetch("/api/centers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, island }),
+      });
+      if (!centerRes.ok) throw new Error("Failed to add center");
+      const newCenter = await centerRes.json();
+
+      const accountRes = await fetch("/api/accounts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password, role: "center_owner", centerId: newCenter.id }),
+      });
+      if (accountRes.ok) {
+        await refreshData();
+        setAddingCenter(false);
+      } else {
+        alert("Failed to add account");
+      }
+    } catch (error) {
+      console.error("Error adding center:", error);
+      alert("Error adding center");
+    }
+  };
+
+  const handleResetPassword = async (accountId, newPassword) => {
+    try {
+      const res = await fetch(`/api/accounts/${accountId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: newPassword }),
+      });
+      if (res.ok) {
+        alert("Password reset successfully");
+        setResetPasswordFor(null);
+      } else {
+        alert("Failed to reset password");
+      }
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      alert("Error resetting password");
+    }
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl">
-            Admin Panel
-          </h1>
-          <p className="mt-1 text-sm text-zinc-600">Manage centers and center owner accounts.</p>
+      <div className="space-y-3">
+        <div className="animate-in fade-in slide-in-from-top-4 duration-700">
+          <div className="flex items-center gap-3">
+            <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-900 to-blue-600 bg-clip-text text-transparent">
+              Center Management
+            </h1>
+            <Badge variant="yellow">Admin</Badge>
+          </div>
+          <p className="mt-3 text-base lg:text-lg text-slate-600 font-medium">Manage centers and center owner accounts</p>
         </div>
-
-        <Tabs
-          tabs={[
-            { id: "centers", label: "Centers" },
-            { id: "accounts", label: "Accounts" },
-          ]}
-          active={tab}
-          onChange={setTab}
-        />
+        <div className="flex gap-3">
+          <button
+            onClick={() => setAddingCenter(true)}
+            className="h-11 rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 hover:shadow-md transition-all"
+          >
+            <BuildingIcon className="w-4 h-4 inline -ml-1 mr-1" />
+            Add New Center & Owner
+          </button>
+        </div>
       </div>
 
-      {tab === "centers" ? <CentersTab db={db} updateDB={updateDB} /> : null}
-      {tab === "accounts" ? <AccountsTab db={db} updateDB={updateDB} /> : null}
-    </div>
-  );
-}
+      {/* Styled Island Filter */}
+      <section className="rounded-2xl bg-gradient-to-br from-blue-50 to-yellow-50/50 p-6 shadow-md border border-blue-200/60 backdrop-blur-sm animate-in fade-in slide-in-from-top-4 duration-700">
+        <div className="flex items-center gap-3">
+          <BuildingIcon className="w-6 h-6 text-blue-600" />
+          <label className="text-lg font-bold text-slate-900">Filter Islands</label>
+        </div>
+        <select
+          value={islandFilter}
+          onChange={(e) => setIslandFilter(e.target.value)}
+          className="mt-4 h-12 w-full max-w-md rounded-2xl border border-blue-200 bg-white/80 px-4 text-sm font-medium shadow-sm backdrop-blur-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200/50"
+        >
 
-function CentersTab({ db, updateDB }) {
-  const [name, setName] = useState("");
-  const [editingId, setEditingId] = useState(null);
-  const [editingName, setEditingName] = useState("");
+          <option value="">All Islands</option>
+          <option value="Luzon">Luzon</option>
+          <option value="Visayas">Visayas</option>
+          <option value="Mindanao">Mindanao</option>
 
-  const centers = db?.centers ?? [];
+        </select>
+      </section>
 
-  return (
-    <div className="space-y-6">
       <Section title="Centers">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-zinc-50 text-xs font-semibold text-zinc-600">
+
               <tr>
-                <th className="px-3 py-2">Name</th>
+                <th className="px Asc -3 py-2">Center Name</th>
+                <th className="px-3 py-2">Island</th>
                 <th className="px-3 py-2">Actions</th>
               </tr>
+
             </thead>
             <tbody className="divide-y divide-zinc-100">
-              {centers.map((c) => (
-                <tr key={c.id} className="hover:bg-zinc-50">
-                  <td className="px-3 py-2 font-medium text-zinc-900">{c.name}</td>
-                  <td className="px-3 py-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditingId(c.id);
-                        setEditingName(c.name);
-                      }}
-                      className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
-                    >
-                      Edit
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {centers.length === 0 ? (
+              {filteredCenters.map((c) => {
+                const owner = getCenterOwner(c.id);
+                return (
+                  <tr key={c.id} className="hover:bg-zinc-50">
+                    <td className="px-3 py-2 font-medium text-zinc-900">{c.name}</td>
+                    <td className="px-3 py-2 text-zinc-600">{c.island}</td>
+                    <td className="px-3 py-2 text-zinc-600">{owner?.username || "No owner"}</td>
+                    <td className="px-3 py-2">
+                      <button
+                        type="button"
+                        onClick={() => handleEditCenter(c)}
+                        className="mr-2 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
+                      >
+                        Edit Center
+                      </button>
+                      {owner && (
+                        <button
+                          type="button"
+                          onClick={() => setResetPasswordFor(owner)}
+                          className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
+                        >
+                          Reset Password
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+              {filteredCenters.length === 0 ? (
                 <tr>
-                  <td className="px-3 py-4 text-sm text-zinc-600" colSpan={2}>
-                    No centers yet.
+                  <td className="px-3 py-4 text-sm text-zinc-600" colSpan={4}>
+                    No centers found.
                   </td>
                 </tr>
               ) : null}
@@ -95,224 +208,207 @@ function CentersTab({ db, updateDB }) {
         </div>
       </Section>
 
-      <Section title="Add Center">
-        <form
-          className="flex flex-col gap-3 sm:flex-row sm:items-end"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const trimmed = name.trim();
-            if (!trimmed) return;
-            updateDB((next) => {
-              next.centers.push({ id: newId("c"), name: trimmed });
-              return next;
-            });
-            setName("");
-          }}
-        >
-          <div className="flex-1 space-y-2">
-            <label className="text-sm font-medium text-zinc-700">Center name</label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-blue-600"
-              placeholder="e.g. TPCAP Center - Bacolod"
-            />
-          </div>
-          <button
-            type="submit"
-            className="h-11 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
-          >
-            Add
-          </button>
-        </form>
-      </Section>
+      {editingCenter && (
+        <EditCenterModal
+          center={editingCenter}
+          onSave={handleSaveCenter}
+          onClose={() => setEditingCenter(null)}
+        />
+      )}
 
-      {editingId ? (
-        <Section
-          title="Edit Center"
-          right={
-            <button
-              type="button"
-              onClick={() => {
-                setEditingId(null);
-                setEditingName("");
-              }}
-              className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
-            >
-              Close
-            </button>
-          }
-        >
-          <form
-            className="flex flex-col gap-3 sm:flex-row sm:items-end"
-            onSubmit={(e) => {
-              e.preventDefault();
-              const trimmed = editingName.trim();
-              if (!trimmed) return;
-              updateDB((next) => {
-                const idx = next.centers.findIndex((c) => c.id === editingId);
-                if (idx >= 0) next.centers[idx].name = trimmed;
-                return next;
-              });
-              setEditingId(null);
-              setEditingName("");
-            }}
-          >
-            <div className="flex-1 space-y-2">
-              <label className="text-sm font-medium text-zinc-700">Center name</label>
-              <input
-                value={editingName}
-                onChange={(e) => setEditingName(e.target.value)}
-                className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-blue-600"
-              />
-            </div>
-            <button
-              type="submit"
-              className="h-11 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
-            >
-              Save
-            </button>
-          </form>
-        </Section>
-      ) : null}
+      {addingCenter && (
+        <AddCenterModal
+          onSave={handleAddCenter}
+          onClose={() => setAddingCenter(false)}
+        />
+      )}
+
+      {resetPasswordFor && (
+        <ResetPasswordModal
+          account={resetPasswordFor}
+          onSave={handleResetPassword}
+          onClose={() => setResetPasswordFor(null)}
+        />
+      )}
     </div>
   );
 }
 
-function AccountsTab({ db, updateDB }) {
-  const centers = db?.centers ?? [];
-  const ownerAccounts = useMemo(
-    () => (db?.accounts ?? []).filter((a) => a.role === "center_owner"),
-    [db]
-  );
+function EditCenterModal({ center, onSave, onClose }) {
+  const [name, setName] = useState(center.name);
+  const [island, setIsland] = useState(center.island);
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [centerId, setCenterId] = useState(centers[0]?.id ?? "");
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(center.id, name, island);
+  };
 
   return (
-    <div className="space-y-6">
-      <Section title="Center Owner Accounts">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-zinc-50 text-xs font-semibold text-zinc-600">
-              <tr>
-                <th className="px-3 py-2">Username</th>
-                <th className="px-3 py-2">Center</th>
-                <th className="px-3 py-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100">
-              {ownerAccounts.map((a) => (
-                <tr key={a.id} className="hover:bg-zinc-50">
-                  <td className="px-3 py-2 font-medium text-zinc-900">{a.username}</td>
-                  <td className="px-3 py-2 text-zinc-700">
-                    {centers.find((c) => c.id === a.centerId)?.name ?? "Unassigned"}
-                  </td>
-                  <td className="px-3 py-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        updateDB((next) => {
-                          const idx = next.accounts.findIndex((x) => x.id === a.id);
-                          if (idx >= 0) next.accounts[idx].password = "reset123";
-                          return next;
-                        });
-                      }}
-                      className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
-                    >
-                      Reset Password
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {ownerAccounts.length === 0 ? (
-                <tr>
-                  <td className="px-3 py-4 text-sm text-zinc-600" colSpan={3}>
-                    No center owner accounts yet.
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
-        <div className="mt-3 text-xs text-zinc-500">
-          Reset Password sets the password to <span className="font-semibold">reset123</span>.
-        </div>
-      </Section>
-
-      <Section title="Create Center Owner Account">
-        <form
-          className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:items-end"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const u = username.trim();
-            const p = password.trim();
-            if (!u || !p || !centerId) return;
-            updateDB((next) => {
-              const exists = next.accounts.some(
-                (a) => a.username.toLowerCase() === u.toLowerCase()
-              );
-              if (exists) return next;
-              next.accounts.push({
-                id: newId("a"),
-                role: "center_owner",
-                username: u,
-                password: p,
-                centerId,
-              });
-              return next;
-            });
-            setUsername("");
-            setPassword("");
-          }}
-        >
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-700">Username</label>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-lg">
+        <h2 className="text-lg font-semibold">Edit Center</h2>
+        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-zinc-700">Center Name</label>
             <input
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-blue-600"
-              placeholder="e.g. owner.bacolod"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="mt-1 h-11 w-full rounded-xl border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-blue-600"
+              required
             />
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-700">Password</label>
-            <input
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-blue-600"
-              placeholder="Set initial password"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-700">Center</label>
+          <div>
+            <label className="block text-sm font-medium text-zinc-700">Island</label>
             <select
-              value={centerId}
-              onChange={(e) => setCenterId(e.target.value)}
-              className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-blue-600"
+              value={island}
+              onChange={(e) => setIsland(e.target.value)}
+              className="mt-1 h-11 w-full rounded-xl border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-blue-600"
+              required
             >
-              <option value="">Select…</option>
-              {centers.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
+              <option value="Luzon">Luzon</option>
+              <option value="Visayas">Visayas</option>
+              <option value="Mindanao">Mindanao</option>
             </select>
           </div>
-          <div className="sm:col-span-3">
+          <div className="flex gap-3">
             <button
               type="submit"
-              className="h-11 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
+              className="flex-1 h-11 rounded-xl bg-blue-600 text-sm font-semibold text-white hover:bg-blue-500"
             >
-              Create Account
+              Save
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 h-11 rounded-xl border border-zinc-300 bg-white text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+            >
+              Cancel
             </button>
           </div>
         </form>
-        <div className="mt-3 text-xs text-zinc-500">
-          Duplicate usernames are ignored for safety in this UI-only demo.
-        </div>
-      </Section>
+      </div>
+    </div>
+  );
+}
+
+function AddCenterModal({ onSave, onClose }) {
+  const [name, setName] = useState("");
+  const [island, setIsland] = useState("Luzon");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(name, island, username, password);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-lg">
+        <h2 className="text-lg font-semibold">Add New Center & Owner</h2>
+        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-zinc-700">Center Name</label>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="mt-1 h-11 w-full rounded-xl border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-blue-600"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-zinc-700">Island</label>
+            <select
+              value={island}
+              onChange={(e) => setIsland(e.target.value)}
+              className="mt-1 h-11 w-full rounded-xl border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-blue-600"
+              required
+            >
+              <option value="Luzon">Luzon</option>
+              <option value="Visayas">Visayas</option>
+              <option value="Mindanao">Mindanao</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-zinc-700">Owner Username</label>
+            <input
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="mt-1 h-11 w-full rounded-xl border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-blue-600"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-zinc-700">Owner Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 h-11 w-full rounded-xl border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-blue-600"
+              required
+            />
+          </div>
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              className="flex-1 h-11 rounded-xl bg-blue-600 text-sm font-semibold text-white hover:bg-blue-500"
+            >
+              Add
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 h-11 rounded-xl border border-zinc-300 bg-white text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ResetPasswordModal({ account, onSave, onClose }) {
+  const [password, setPassword] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(account.id, password);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-lg">
+        <h2 className="text-lg font-semibold">Reset Password for {account.username}</h2>
+        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-zinc-700">New Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 h-11 w-full rounded-xl border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-blue-600"
+              required
+            />
+          </div>
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              className="flex-1 h-11 rounded-xl bg-blue-600 text-sm font-semibold text-white hover:bg-blue-500"
+            >
+              Reset
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 h-11 rounded-xl border border-zinc-300 bg-white text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

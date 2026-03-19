@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { clearSession, saveSession, SESSION_KEY } from "@/lib/session";
-import { DB_KEY, findAccountById, findCenterById, getSeedDB, saveDB } from "@/lib/db";
 
 const AuthContext = createContext(null);
 
@@ -17,20 +16,42 @@ function readJSON(key) {
 }
 
 export function AuthProvider({ children }) {
-  const [db, setDb] = useState(() => typeof window === "undefined" ? getSeedDB() : null);
+  const [centers, setCenters] = useState([]);
+  const [accounts, setAccounts] = useState([]);
   const [session, setSession] = useState(() => typeof window === "undefined" ? null : null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const updateDb = () => {
-      const parsed = readJSON(DB_KEY);
-      if (!parsed?.centers || !parsed?.accounts) {
-        const seeded = getSeedDB();
-        setDb(seeded);
-        saveDB(seeded);
-      } else {
-        setDb(parsed);
+    const updateCenters = async () => {
+      try {
+        const res = await fetch("/api/centers");
+        if (res.ok) {
+          const data = await res.json();
+          setCenters(data);
+        } else {
+          console.error("Failed to fetch centers");
+          setCenters([]);
+        }
+      } catch (error) {
+        console.error("Error fetching centers:", error);
+        setCenters([]);
+      }
+    };
+
+    const updateAccounts = async () => {
+      try {
+        const res = await fetch("/api/accounts");
+        if (res.ok) {
+          const data = await res.json();
+          setAccounts(data);
+        } else {
+          console.error("Failed to fetch accounts");
+          setAccounts([]);
+        }
+      } catch (error) {
+        console.error("Error fetching accounts:", error);
+        setAccounts([]);
       }
     };
 
@@ -43,42 +64,40 @@ export function AuthProvider({ children }) {
       }
     };
 
-    updateDb();
+    updateCenters();
+    updateAccounts();
     updateSession();
 
     const handler = () => {
-      updateDb();
       updateSession();
     };
 
     window.addEventListener("storage", handler);
-    window.addEventListener("tpcap:store", handler);
 
     return () => {
       window.removeEventListener("storage", handler);
-      window.removeEventListener("tpcap:store", handler);
     };
   }, []);
 
-  const loading = db === null;
+  const loading = accounts.length === 0 && centers.length === 0; // rough loading check
 
   const api = useMemo(() => {
-    const account = db && session ? findAccountById(db, session.accountId) : null;
+    const account = accounts.find((a) => a.id === session?.accountId) || null;
 
     const activeCenterId =
       session?.role === "admin" ? session?.selectedCenterId ?? null : account?.centerId ?? null;
-    const activeCenter = db && activeCenterId ? findCenterById(db, activeCenterId) : null;
+    const activeCenter = centers.find((c) => c.id === activeCenterId) || null;
 
     return {
-      db,
+      centers,
+      accounts,
       session,
       loading,
       account,
       activeCenter,
       activeCenterId,
       login: ({ username, password }) => {
-        if (!db) return { ok: false, error: "App is still loading." };
-        const match = db.accounts.find(
+        const match = accounts.find(
           (a) =>
             a.username.trim().toLowerCase() === username.trim().toLowerCase() &&
             a.password === password
@@ -99,13 +118,21 @@ export function AuthProvider({ children }) {
         if (!session || session.role !== "admin") return;
         saveSession({ ...session, selectedCenterId: centerId || null });
       },
-      updateDB: (updater) => {
-        if (!db) return;
-        const next = updater(structuredClone(db));
-        saveDB(next);
+      refreshData: async () => {
+        // To refresh centers and accounts after changes
+        try {
+          const [centersRes, accountsRes] = await Promise.all([
+            fetch("/api/centers"),
+            fetch("/api/accounts"),
+          ]);
+          if (centersRes.ok) setCenters(await centersRes.json());
+          if (accountsRes.ok) setAccounts(await accountsRes.json());
+        } catch (error) {
+          console.error("Error refreshing data:", error);
+        }
       },
     };
-  }, [db, session, loading]);
+  }, [centers, accounts, session, loading]);
 
   return <AuthContext.Provider value={api}>{children}</AuthContext.Provider>;
 }
