@@ -5,6 +5,8 @@ import { useAuth } from "@/components/AuthProvider";
 import Badge from "@/components/Badge";
 import { BuildingIcon, UserIcon } from "@/components/Icons";
 import KpiCard from "@/components/KpiCard";
+import CenterSelectorBar from "@/components/CenterSelectorBar";
+import { getDashboardKpis } from "@/lib/metrics";
 
 function Section({ title, children, right }) {
   return (
@@ -19,7 +21,7 @@ function Section({ title, children, right }) {
 }
 
 export default function AdminPage() {
-  const { centers, accounts, refreshData } = useAuth();
+  const { centers, accounts, refreshData, activeCenterId, activeCenter, selectCenter } = useAuth();
   const [islandFilter, setIslandFilter] = useState("");
   const [editingCenter, setEditingCenter] = useState(null);
   const [addingCenter, setAddingCenter] = useState(false);
@@ -33,6 +35,13 @@ export default function AdminPage() {
   const getCenterOwner = (centerId) => {
     return accounts.find(a => a.role === "center_owner" && a.centerId === centerId) || null;
   };
+
+  const selectedCenterStats = useMemo(() => {
+    if (!activeCenterId) return [];
+    const kpis = getDashboardKpis(activeCenterId)?.kpis ?? [];
+    const want = new Set(["Active Onlist", "Overall Onlist", "Center Capacity"]);
+    return kpis.filter((k) => want.has(k.title));
+  }, [activeCenterId]);
 
   // Compute KPIs
   const totalCenters = filteredCenters.length;
@@ -135,6 +144,36 @@ export default function AdminPage() {
         </div>
       </div>
 
+      <section className="space-y-4 rounded-2xl bg-white shadow-sm ring-1 ring-zinc-200 p-6">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <div className="text-lg font-bold text-zinc-900">Select Center</div>
+            <div className="mt-1 text-sm text-zinc-600">
+              {activeCenterId ? `Selected: ${activeCenter?.name ?? activeCenterId}` : "No center selected yet"}
+            </div>
+          </div>
+        </div>
+
+        <CenterSelectorBar />
+
+        {activeCenterId ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {selectedCenterStats.map((k) => (
+              <KpiCard
+                key={k.title}
+                title={k.title}
+                value={k.value}
+                previous={k.previous}
+                subtitle={k.subtitle}
+                status={k.status}
+                icon={<UserIcon className="h-5 w-5" />}
+                variant="blue"
+              />
+            ))}
+          </div>
+        ) : null}
+      </section>
+
       {/* Styled Island Filter */}
       <section className="rounded-2xl bg-gradient-to-br from-blue-50 to-yellow-50/50 p-6 shadow-md border border-blue-200/60 backdrop-blur-sm animate-in fade-in slide-in-from-top-4 duration-700">
         <div className="flex items-center gap-3">
@@ -161,8 +200,9 @@ export default function AdminPage() {
             <thead className="bg-zinc-50 text-xs font-semibold text-zinc-600">
 
               <tr>
-                <th className="px Asc -3 py-2">Center Name</th>
+                <th className="px-3 py-2">Center Name</th>
                 <th className="px-3 py-2">Island</th>
+                <th className="px-3 py-2">Owner</th>
                 <th className="px-3 py-2">Actions</th>
               </tr>
 
@@ -170,15 +210,28 @@ export default function AdminPage() {
             <tbody className="divide-y divide-zinc-100">
               {filteredCenters.map((c) => {
                 const owner = getCenterOwner(c.id);
+                const selected = c.id === activeCenterId;
                 return (
-                  <tr key={c.id} className="hover:bg-zinc-50">
+                  <tr
+                    key={c.id}
+                    className={[
+                      "hover:bg-zinc-50",
+                      selected ? "bg-yellow-50" : "",
+                    ].join(" ")}
+                    onClick={() => selectCenter(c.id)}
+                    role="button"
+                    tabIndex={0}
+                  >
                     <td className="px-3 py-2 font-medium text-zinc-900">{c.name}</td>
                     <td className="px-3 py-2 text-zinc-600">{c.island}</td>
                     <td className="px-3 py-2 text-zinc-600">{owner?.username || "No owner"}</td>
                     <td className="px-3 py-2">
                       <button
                         type="button"
-                        onClick={() => handleEditCenter(c)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditCenter(c);
+                        }}
                         className="mr-2 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
                       >
                         Edit Center
@@ -186,7 +239,10 @@ export default function AdminPage() {
                       {owner && (
                         <button
                           type="button"
-                          onClick={() => setResetPasswordFor(owner)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setResetPasswordFor(owner);
+                          }}
                           className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
                         >
                           Reset Password

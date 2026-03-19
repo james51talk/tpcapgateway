@@ -1,6 +1,15 @@
 import { query } from "@/lib/mysql";
 
+const useDbCenters = process.env.USE_DB_CENTERS === "true";
+
 export async function PUT(request, { params }) {
+  if (!useDbCenters) {
+    return new Response(JSON.stringify({ error: "Centers are running in code-only mode." }), {
+      status: 501,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const { id } = params;
     const { name, island } = await request.json();
@@ -19,6 +28,13 @@ export async function PUT(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
+  if (!useDbCenters) {
+    return new Response(JSON.stringify({ error: "Centers are running in code-only mode." }), {
+      status: 501,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const { id } = params;
     await query("DELETE FROM centers WHERE center_id = ?", [id]);

@@ -74,8 +74,7 @@ export default function LoginPage() {
                   setSubmitting(false);
                   return;
                 }
-                router.replace("/");
-                router.refresh();
+                window.location.assign("/");
               }}
             >
               {/* Username Field */}
@@ -193,7 +192,7 @@ export default function LoginPage() {
                       </svg>
                       Center Owner
                     </p>
-                    <p className="text-xs lg:text-sm font-mono text-blue-800 font-bold tracking-wide">owner.manila</p>
+                    <p className="text-xs lg:text-sm font-mono text-blue-800 font-bold tracking-wide">owner.lucena</p>
                     <p className="text-xs lg:text-sm font-mono text-blue-800 font-bold tracking-wide">owner123</p>
                   </div>
                   <div className="bg-gradient-to-br from-yellow-50 to-white rounded-xl p-4 border border-yellow-300/60 hover:border-yellow-500 transition-all duration-200 shadow-sm hover:shadow-md">

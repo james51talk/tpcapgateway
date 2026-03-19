@@ -19,39 +19,45 @@ export function AuthProvider({ children }) {
   const [centers, setCenters] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [session, setSession] = useState(() => (typeof window === "undefined" ? null : loadSession()));
+  const [centersLoaded, setCentersLoaded] = useState(false);
+  const [accountsLoaded, setAccountsLoaded] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    const fetchJson = async (url) => {
+      const controller = new AbortController();
+      const timer = window.setTimeout(() => controller.abort(), 5000);
+      try {
+        const res = await fetch(url, { signal: controller.signal });
+        if (!res.ok) return null;
+        return await res.json();
+      } finally {
+        window.clearTimeout(timer);
+      }
+    };
+
     const updateCenters = async () => {
       try {
-        const res = await fetch("/api/centers");
-        if (res.ok) {
-          const data = await res.json();
-          setCenters(data);
-        } else {
-          console.error("Failed to fetch centers");
-          setCenters([]);
-        }
+        const data = await fetchJson("/api/centers");
+        setCenters(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Error fetching centers:", error);
         setCenters([]);
+      } finally {
+        setCentersLoaded(true);
       }
     };
 
     const updateAccounts = async () => {
       try {
-        const res = await fetch("/api/accounts");
-        if (res.ok) {
-          const data = await res.json();
-          setAccounts(data);
-        } else {
-          console.error("Failed to fetch accounts");
-          setAccounts([]);
-        }
+        const data = await fetchJson("/api/accounts");
+        setAccounts(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Error fetching accounts:", error);
         setAccounts([]);
+      } finally {
+        setAccountsLoaded(true);
       }
     };
 
@@ -81,7 +87,7 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  const loading = accounts.length === 0 && centers.length === 0; // rough loading check
+  const loading = !(accountsLoaded && centersLoaded);
 
   const api = useMemo(() => {
     const account = accounts.find((a) => a.id === session?.accountId) || null;
