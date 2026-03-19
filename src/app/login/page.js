@@ -26,7 +26,7 @@ export default function LoginPage() {
       <div className="absolute top-10 right-10 w-48 h-48 bg-yellow-300/20 rounded-full blur-3xl"></div>
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl"></div>
       
-      <div className="mx-auto w-full max-w-lg relative z-10">
+max-w-[900px]
         <div className="flex flex-col lg:flex-row w-full overflow-hidden rounded-3xl bg-white shadow-2xl border border-white/20 backdrop-blur-xl">
           {/* Left Panel - Branding */}
           <div className="hidden lg:flex lg:w-2/5 flex-col justify-between bg-gradient-to-br from-blue-600 via-blue-700 to-blue-900 px-8 py-12 text-white relative overflow-hidden">
