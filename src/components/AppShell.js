@@ -48,7 +48,7 @@ export default function AppShell({ children }) {
     if (pathname === "/") return "Dashboard";
     if (pathname === "/centers") return "Center Information";
     if (pathname === "/billing") return "Earnings";
-    if (pathname === "/account") return "Account";
+if (pathname === "/account-settings") return "Account Settings";
     if (pathname === "/admin") return "Center Management";
     if (pathname === "/faq") return "FAQ";
     return "TPCAP-CO Portal";
@@ -104,7 +104,7 @@ export default function AppShell({ children }) {
             />
             {!showAdmin && (
               <SidebarLink
-                href="/account"
+href="/account-settings"
                 label="Account"
                 icon={<UserIcon className="h-5 w-5" />}
                 onNavigate={() => setMobileOpen(false)}
