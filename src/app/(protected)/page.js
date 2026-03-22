@@ -5,8 +5,9 @@ import { useAuth } from "@/components/AuthProvider";
 import Badge from "@/components/Badge";
 import CenterSelectorBar from "@/components/CenterSelectorBar";
 import DashboardDateFilter from "@/components/DashboardDateFilter";
-import { BuildingIcon, BookIcon, BookOpenIcon, CalendarIcon, GraduationCapIcon, PieChartIcon, TrendingUpIcon, UserCheckIcon, UserMinusIcon, UsersIcon } from "@/components/Icons";
+import { BuildingIcon, CalendarIcon, GraduationCapIcon, PieChartIcon, TrendingUpIcon, UserCheckIcon, UserMinusIcon, UsersIcon } from "@/components/Icons";
 import KpiCard from "@/components/KpiCard";
+import SmartBriefing from "@/components/SmartBriefing";
 import { getDashboardKpis } from "@/lib/metrics";
 
 function kpiVisual(title) {
@@ -33,13 +34,20 @@ function kpiVisual(title) {
 }
 
 export default function DashboardPage() {
-  const { session, activeCenter, activeCenterId } = useAuth();
+  const { session, activeCenter, activeCenterId, accounts } = useAuth();
   const [filterOptions, setFilterOptions] = useState({ filterType: "week", filterDate: new Date() });
 
   const needsCenter = session?.role === "admin" && !activeCenterId;
 
   const dashboardData = needsCenter ? { dateRange: "", kpis: [] } : getDashboardKpis(activeCenterId, filterOptions);
   const { dateRange, kpis } = dashboardData;
+
+  // Yesterday's KPIs for AI delta analysis (use prev data already in each kpi object)
+  const kpisYesterday = kpis.map((k) => ({ title: k.title, value: k.previous, rawValue: null }));
+
+  // Resolve display name for the greeting
+  const account = accounts?.find((a) => a.id === session?.accountId);
+  const userName = account?.username || "there";
 
   const handleFilterChange = (options) => {
     setFilterOptions(options);
@@ -88,6 +96,15 @@ export default function DashboardPage() {
               </div>
             </div>
           </section>
+
+          <SmartBriefing
+            centerId={activeCenterId}
+            centerName={activeCenter?.name}
+            kpisToday={kpis}
+            kpisYesterday={kpisYesterday}
+            role={session?.role}
+            userName={userName}
+          />
 
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
             {kpis.map((k) => {
