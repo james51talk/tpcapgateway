@@ -160,9 +160,7 @@ export default function DashboardPage() {
                   icon={v.icon}
                   variant={v.variant}
                   status={k.status}
-                  progress={k.progress}
                   percentChange={k.percentChange}
-                  target={k.target}
                 />
               );
             })}

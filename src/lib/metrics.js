@@ -69,31 +69,31 @@ export function getDashboardKpis(centerId, opts = {}) {
   const seed = hashString(centerId || "none");
   const activeOnlist = pickNumber(seed ^ 0x1111, 25, 90);
   const activeOnlistPrev = pickNumber(seed ^ 0xaaaa, 10, 24);
-  const activeOnlistTarget = 80;
+
   
   const overallOnlist = pickNumber(seed ^ 0x2222, 50, 150);
   const overallOnlistPrev = pickNumber(seed ^ 0xbbbb, 30, 49);
-  const overallOnlistTarget = 120;
+
   
   const attrition = pickNumber(seed ^ 0x3333, 0, 15);
   const attritionPrev = pickNumber(seed ^ 0xcccc, 16, 30);
-  const attritionTarget = 5;
+
   
   const centerCapacity = pickNumber(seed ^ 0x8888, 75, 95);
   const centerCapacityPrev = pickNumber(seed ^ 0xdddd, 50, 74);
-  const centerCapacityTarget = 90;
+
   
   const utilization = pickNumber(seed ^ 0x9999, 70, 90);
   const utilizationPrev = pickNumber(seed ^ 0xeeee, 50, 69);
-  const utilizationTarget = 85;
+
   
   const teacherEarnings = pickNumber(seed ^ 0x4444, 100_000, 250_000);
   const teacherEarningsPrev = pickNumber(seed ^ 0x1111, 50_000, 99_999);
-  const teacherEarningsTarget = 200_000;
+
   
   const coEarnings = pickNumber(seed ^ 0x5555, 80_000, 220_000);
   const coEarningsPrev = pickNumber(seed ^ 0x2222, 40_000, 79_999);
-  const coEarningsTarget = 180_000;
+
 
   // Helper to calculate percentage change
   const calcPercentChange = (current, previous) => {
@@ -101,19 +101,13 @@ export function getDashboardKpis(centerId, opts = {}) {
     return Math.round(((current - previous) / previous) * 100);
   };
 
-  // Helper to calculate progress to target
-  const calcProgress = (current, target) => {
-    if (target === 0) return 0;
-    return Math.min(100, Math.round((current / target) * 100));
-  };
+
 
   const kpis = [
     { 
       title: "Active Onlist", 
       value: formatInt(activeOnlist),
       previous: formatInt(activeOnlistPrev),
-      target: activeOnlistTarget,
-      progress: calcProgress(activeOnlist, activeOnlistTarget),
       percentChange: calcPercentChange(activeOnlist, activeOnlistPrev),
       status: activeOnlist > activeOnlistPrev ? "success" : "danger" 
     },
@@ -121,8 +115,6 @@ export function getDashboardKpis(centerId, opts = {}) {
       title: "Overall Onlist", 
       value: formatInt(overallOnlist),
       previous: formatInt(overallOnlistPrev),
-      target: overallOnlistTarget,
-      progress: calcProgress(overallOnlist, overallOnlistTarget),
       percentChange: calcPercentChange(overallOnlist, overallOnlistPrev),
       status: overallOnlist > overallOnlistPrev ? "success" : "danger" 
     },
@@ -130,8 +122,6 @@ export function getDashboardKpis(centerId, opts = {}) {
       title: "Center Capacity", 
       value: `${centerCapacity}%`,
       previous: `${centerCapacityPrev}%`,
-      target: centerCapacityTarget,
-      progress: centerCapacity,
       percentChange: centerCapacity - centerCapacityPrev,
       status: centerCapacity > centerCapacityPrev ? "success" : "danger" 
     },
@@ -139,8 +129,6 @@ export function getDashboardKpis(centerId, opts = {}) {
       title: "Utilization", 
       value: `${utilization}%`,
       previous: `${utilizationPrev}%`,
-      target: utilizationTarget,
-      progress: utilization,
       percentChange: utilization - utilizationPrev,
       status: utilization > utilizationPrev ? "success" : "danger" 
     },
@@ -148,8 +136,6 @@ export function getDashboardKpis(centerId, opts = {}) {
       title: "Teacher Earnings", 
       value: formatPHP(teacherEarnings),
       previous: formatPHP(teacherEarningsPrev),
-      target: teacherEarningsTarget,
-      progress: calcProgress(teacherEarnings, teacherEarningsTarget),
       percentChange: calcPercentChange(teacherEarnings, teacherEarningsPrev),
       status: teacherEarnings > teacherEarningsPrev ? "success" : "danger" 
     },
@@ -157,8 +143,6 @@ export function getDashboardKpis(centerId, opts = {}) {
       title: "CO Earnings", 
       value: formatPHP(coEarnings),
       previous: formatPHP(coEarningsPrev),
-      target: coEarningsTarget,
-      progress: calcProgress(coEarnings, coEarningsTarget),
       percentChange: calcPercentChange(coEarnings, coEarningsPrev),
       status: coEarnings > coEarningsPrev ? "success" : "danger" 
     },
@@ -166,8 +150,6 @@ export function getDashboardKpis(centerId, opts = {}) {
       title: "Attrition", 
       value: `${attrition}%`,
       previous: `${attritionPrev}%`,
-      target: attritionTarget,
-      progress: Math.max(0, 100 - (attrition * 100 / 30)), // Inverse progress for attrition
       percentChange: attrition - attritionPrev,
       status: attrition < attritionPrev ? "success" : "danger" 
     },

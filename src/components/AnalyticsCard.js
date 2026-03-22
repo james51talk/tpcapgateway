@@ -1,6 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
 
 const variantColors = {
   blue: {
@@ -11,8 +8,6 @@ const variantColors = {
     iconBg: "from-blue-100 to-blue-50 border-blue-200",
     text: "text-blue-900",
     label: "text-blue-600",
-    bar: "from-blue-500 to-blue-400",
-    barBg: "bg-blue-100",
   },
   yellow: {
     bg: "from-yellow-50 to-amber-100/50",
@@ -22,8 +17,6 @@ const variantColors = {
     iconBg: "from-yellow-100 to-yellow-50 border-yellow-200",
     text: "text-yellow-900",
     label: "text-yellow-600",
-    bar: "from-yellow-500 to-amber-400",
-    barBg: "bg-yellow-100",
   },
   green: {
     bg: "from-emerald-50 to-emerald-100/50",
@@ -33,8 +26,6 @@ const variantColors = {
     iconBg: "from-emerald-100 to-emerald-50 border-emerald-200",
     text: "text-emerald-900",
     label: "text-emerald-600",
-    bar: "from-emerald-500 to-emerald-400",
-    barBg: "bg-emerald-100",
   },
   red: {
     bg: "from-red-50 to-red-100/50",
@@ -44,8 +35,6 @@ const variantColors = {
     iconBg: "from-red-100 to-red-50 border-red-200",
     text: "text-red-900",
     label: "text-red-600",
-    bar: "from-red-500 to-red-400",
-    barBg: "bg-red-100",
   },
 };
 
@@ -68,23 +57,6 @@ function TrendArrow({ percentChange, status }) {
   );
 }
 
-function AnimatedProgressBar({ progress, barClass, bgClass }) {
-  const [width, setWidth] = useState(0);
-
-  useEffect(() => {
-    const t = setTimeout(() => setWidth(Math.min(100, Math.max(0, progress))), 100);
-    return () => clearTimeout(t);
-  }, [progress]);
-
-  return (
-    <div className={`h-2 w-full rounded-full ${bgClass} overflow-hidden`}>
-      <div
-        className={`h-full rounded-full bg-gradient-to-r ${barClass} transition-all duration-1000 ease-out`}
-        style={{ width: `${width}%` }}
-      />
-    </div>
-  );
-}
 
 export default function AnalyticsCard({
   title,
@@ -93,9 +65,7 @@ export default function AnalyticsCard({
   icon,
   variant = "blue",
   status,
-  progress = 0,
   percentChange = 0,
-  target,
 }) {
   const statusVariant =
     status === "success" ? "green" : status === "danger" ? "red" : variant;
@@ -141,23 +111,6 @@ export default function AnalyticsCard({
             {icon}
           </div>
         )}
-      </div>
-
-      {/* Progress bar */}
-      <div className="mb-3">
-        <AnimatedProgressBar progress={progress} barClass={c.bar} bgClass={c.barBg} />
-        <div className="flex items-center justify-between mt-1.5">
-          <span className="text-[10px] font-semibold text-slate-400">
-            {Math.round(progress)}% of target
-          </span>
-          {target && (
-            <span className="text-[10px] font-semibold text-slate-400">
-              Target: {typeof target === "number" && target > 1000
-                ? `₱${target.toLocaleString()}`
-                : target}
-            </span>
-          )}
-        </div>
       </div>
 
       {/* Previous comparison */}
