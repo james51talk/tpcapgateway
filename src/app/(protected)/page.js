@@ -117,8 +117,8 @@ export default function DashboardPage() {
               <div className="flex items-center gap-4 px-6 py-5 h-full">
                 <div className="h-12 w-12 flex items-center justify-center rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 border border-blue-200">
                   <img
-                    src="/logo.png"
-                    alt="Logo"
+                    src="/51talklogo.png"
+                    alt="TPCAP-CO Logo"
                     className="h-6 w-6 object-contain"
                   />
                 </div>

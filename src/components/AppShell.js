@@ -74,8 +74,15 @@ if (pathname === "/account-settings") return "Account Settings";
         ].join(" ")}
       >
         <div className="border-b border-white/10 px-5 py-6">
-          <div className="text-sm font-extrabold tracking-widest text-yellow-300">
-            TPCAP-CO Portal
+          <div className="flex items-center gap-3">
+            <img
+              src="/51talklogo.png"
+              alt="TPCAP-CO Logo"
+              className="h-9 w-9 rounded-lg object-contain"
+            />
+            <div className="text-sm font-extrabold tracking-widest text-yellow-300">
+              TPCAP-CO Portal
+            </div>
           </div>
         </div>
 

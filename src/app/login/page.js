@@ -43,9 +43,9 @@ export default function LoginPage() {
                   className="h-36 w-36 object-contain drop-shadow-2xl hover:drop-shadow-3xl transition-all duration-300"
                 />
               </div>
-              <div className="text-4xl font-bold tracking-tight mb-2 animate-in fade-in slide-in-from-top-6 duration-700">TPCAP</div>
+              <div className="text-4xl font-bold tracking-tight mb-2 animate-in fade-in slide-in-from-top-6 duration-700">TPCAP-CO</div>
               <div className="inline-block bg-yellow-300/30 backdrop-blur-sm rounded-full px-4 py-2 border border-yellow-300/50 animate-in fade-in duration-700 delay-100">
-                <p className="text-sm font-bold text-yellow-100">Center Owner Portal</p>
+                <p className="text-sm font-bold text-yellow-100">Portal</p>
               </div>
             </div>
           </div>
