@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
-import { FileTextIcon, HelpCircleIcon, LayoutDashboardIcon, LogOutIcon, MenuIcon, ShieldIcon, XIcon } from "@/components/Icons";
+import { FileTextIcon, HelpCircleIcon, LayoutDashboardIcon, LogOutIcon, MenuIcon, ShieldIcon, UserIcon, XIcon } from "@/components/Icons";
 
 function initials(text) {
   const parts = String(text || "")
@@ -48,6 +48,7 @@ export default function AppShell({ children }) {
     if (pathname === "/") return "Dashboard";
     if (pathname === "/centers") return "Center Information";
     if (pathname === "/billing") return "Earnings";
+if (pathname === "/account-settings") return "Account Settings";
     if (pathname === "/admin") return "Center Management";
     if (pathname === "/faq") return "FAQ";
     return "TPCAP-CO Portal";
@@ -101,7 +102,14 @@ export default function AppShell({ children }) {
               icon={<FileTextIcon className="h-5 w-5" />}
               onNavigate={() => setMobileOpen(false)}
             />
-
+            {!showAdmin && (
+              <SidebarLink
+href="/account-settings"
+                label="Account"
+                icon={<UserIcon className="h-5 w-5" />}
+                onNavigate={() => setMobileOpen(false)}
+              />
+            )}
             {showAdmin ? (
               <>
                 <div className="mt-3 px-5 pb-2 text-[10px] font-extrabold uppercase tracking-widest text-white/30">

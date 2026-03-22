@@ -16,6 +16,9 @@ const firaMono = Fira_Mono({
 export const metadata = {
   title: "TPCAP Bill Gateway",
   description: "TPCAP Bill Gateway UI",
+  icons: {
+    icon: "/51talklogo.png",
+  },
 };
 
 export default function RootLayout({ children }) {
