@@ -45,7 +45,7 @@ export default function AppShell({ children }) {
 
   const showAdmin = session?.role === "admin";
   const title = useMemo(() => {
-    if (pathname === "/") return "Dashboard";
+    if (pathname === "/") return "Analytics";
     if (pathname === "/centers") return "Center Information";
     if (pathname === "/billing") return "Earnings";
 if (pathname === "/account-settings") return "Account Settings";
@@ -86,7 +86,7 @@ if (pathname === "/account-settings") return "Account Settings";
             </div>
             <SidebarLink
               href="/"
-              label="Dashboard"
+              label="Analytics"
               icon={<LayoutDashboardIcon className="h-5 w-5" />}
               onNavigate={() => setMobileOpen(false)}
             />

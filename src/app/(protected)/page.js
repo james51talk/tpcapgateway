@@ -2,18 +2,27 @@
 
 import { useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import AnalyticsCard from "@/components/AnalyticsCard";
+import AnalyticsChartSection from "@/components/AnalyticsChartSection";
 import Badge from "@/components/Badge";
 import CenterSelectorBar from "@/components/CenterSelectorBar";
 import DashboardDateFilter from "@/components/DashboardDateFilter";
-import { BuildingIcon, CalendarIcon, GraduationCapIcon, PieChartIcon, TrendingUpIcon, UserCheckIcon, UserMinusIcon, UsersIcon } from "@/components/Icons";
-import KpiCard from "@/components/KpiCard";
+import HealthScoreWidget from "@/components/HealthScoreWidget";
+import {
+  BuildingIcon,
+  CalendarIcon,
+  GraduationCapIcon,
+  PieChartIcon,
+  TrendingUpIcon,
+  UserCheckIcon,
+  UserMinusIcon,
+  UsersIcon,
+} from "@/components/Icons";
 import SmartBriefing from "@/components/SmartBriefing";
 import { getDashboardKpis } from "@/lib/metrics";
 
 function kpiVisual(title) {
   switch (title) {
-    case "Time Coverage":
-      return { icon: <CalendarIcon className="h-5 w-5" />, variant: "blue" };
     case "Active Onlist":
       return { icon: <UsersIcon className="h-5 w-5" />, variant: "blue" };
     case "Overall Onlist":
@@ -35,17 +44,26 @@ function kpiVisual(title) {
 
 export default function DashboardPage() {
   const { session, activeCenter, activeCenterId, accounts } = useAuth();
-  const [filterOptions, setFilterOptions] = useState({ filterType: "week", filterDate: new Date() });
+  const [filterOptions, setFilterOptions] = useState({
+    filterType: "week",
+    filterDate: new Date(),
+  });
 
   const needsCenter = session?.role === "admin" && !activeCenterId;
 
-  const dashboardData = needsCenter ? { dateRange: "", kpis: [] } : getDashboardKpis(activeCenterId, filterOptions);
-  const { dateRange, kpis } = dashboardData;
+  const dashboardData = needsCenter
+    ? { dateRange: "", kpis: [], summary: { healthyKpis: 0, needsAttention: 0, healthPercentage: 0, totalKpis: 0 } }
+    : getDashboardKpis(activeCenterId, filterOptions);
+  const { dateRange, kpis, summary } = dashboardData;
 
-  // Yesterday's KPIs for AI delta analysis (use prev data already in each kpi object)
-  const kpisYesterday = kpis.map((k) => ({ title: k.title, value: k.previous, rawValue: null }));
+  // Yesterday's KPIs for AI delta analysis
+  const kpisYesterday = kpis.map((k) => ({
+    title: k.title,
+    value: k.previous,
+    rawValue: null,
+  }));
 
-  // Resolve display name for the greeting
+  // Resolve display name for greeting
   const account = accounts?.find((a) => a.id === session?.accountId);
   const userName = account?.username || "there";
 
@@ -55,48 +73,71 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      {/* ── Header ─────────────────────────────────────────────── */}
       <div className="space-y-3">
         <div className="animate-in fade-in slide-in-from-top-4 duration-700">
           <div className="flex items-center gap-3">
-            <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-900 to-blue-600 bg-clip-text text-transparent">Dashboard</h1>
-            <Badge variant="yellow">Weekly Update</Badge>
+            <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-900 to-blue-600 bg-clip-text text-transparent">
+              Analytics
+            </h1>
+            <Badge variant="green">Live Data</Badge>
           </div>
-          <p className="mt-3 text-base lg:text-lg text-slate-600 font-medium">Overview of your center&apos;s performance</p>
+          <p className="mt-3 text-base lg:text-lg text-slate-600 font-medium">
+            Real-time performance insights for your center
+          </p>
         </div>
 
         <CenterSelectorBar />
 
-        {!needsCenter && <DashboardDateFilter onFilterChange={handleFilterChange} />}
+        {!needsCenter && (
+          <DashboardDateFilter onFilterChange={handleFilterChange} />
+        )}
       </div>
 
       {needsCenter ? (
         <section className="rounded-2xl border border-blue-200/60 bg-gradient-to-br from-blue-50/80 via-white to-yellow-50/50 p-6 text-base text-slate-700 font-medium shadow-md backdrop-blur-sm animate-in fade-in slide-in-from-top-4 duration-700">
           <div className="flex items-center gap-3">
-            <svg className="w-5 h-5 text-blue-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <svg
+              className="w-5 h-5 text-blue-600 flex-shrink-0"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
               <path d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2z" />
             </svg>
-            Select a center to view KPI data.
+            Select a center to view analytics data.
           </div>
         </section>
       ) : (
         <>
-          <section className="rounded-2xl bg-gradient-to-br from-white to-yellow-50/30 shadow-md border border-blue-200/60 backdrop-blur-sm animate-in fade-in slide-in-from-top-4 duration-700 delay-100">
-            <div className="flex items-center gap-4 px-6 py-5">
-              <div className="h-12 w-12 flex items-center justify-center rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 border border-blue-200">
-                <img src="/logo.png" alt="Logo" className="h-6 w-6 object-contain" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-lg font-bold bg-gradient-to-r from-blue-900 to-blue-700 bg-clip-text text-transparent">
-                  {activeCenter?.name || "Center"}
-                </div>
-                <div className="mt-1 text-xs font-medium text-slate-500">Active center</div>
-              </div>
-              <div className="ml-auto flex items-center gap-2">
-                <Badge variant="blue">Active</Badge>
-              </div>
-            </div>
-          </section>
+          {/* ── Top Row: Health Score + Center Card ──────────────── */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-4 duration-700 delay-100">
+            <HealthScoreWidget summary={summary} />
 
+            <section className="rounded-2xl bg-gradient-to-br from-white to-yellow-50/30 shadow-md border border-blue-200/60 backdrop-blur-sm">
+              <div className="flex items-center gap-4 px-6 py-5 h-full">
+                <div className="h-12 w-12 flex items-center justify-center rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 border border-blue-200">
+                  <img
+                    src="/logo.png"
+                    alt="Logo"
+                    className="h-6 w-6 object-contain"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-lg font-bold bg-gradient-to-r from-blue-900 to-blue-700 bg-clip-text text-transparent">
+                    {activeCenter?.name || "Center"}
+                  </div>
+                  <div className="mt-1 text-xs font-medium text-slate-500">
+                    Active center · {dateRange || "Current period"}
+                  </div>
+                </div>
+                <div className="ml-auto flex items-center gap-2">
+                  <Badge variant="blue">Active</Badge>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          {/* ── AI Briefing ─────────────────────────────────────── */}
           <SmartBriefing
             centerId={activeCenterId}
             centerName={activeCenter?.name}
@@ -106,26 +147,31 @@ export default function DashboardPage() {
             userName={userName}
           />
 
-          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+          {/* ── KPI Analytics Cards ─────────────────────────────── */}
+          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
             {kpis.map((k) => {
               const v = kpiVisual(k.title);
               return (
-                <KpiCard
+                <AnalyticsCard
                   key={k.title}
                   title={k.title}
                   value={k.value}
                   previous={k.previous}
-                  subtitle={k.subtitle}
                   icon={v.icon}
                   variant={v.variant}
                   status={k.status}
+                  progress={k.progress}
+                  percentChange={k.percentChange}
+                  target={k.target}
                 />
               );
             })}
           </section>
+
+          {/* ── Chart Visualizations ────────────────────────────── */}
+          <AnalyticsChartSection kpis={kpis} />
         </>
       )}
     </div>
   );
 }
-
